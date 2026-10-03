@@ -25,6 +25,8 @@
     <Compile Include="src\ingestion\data_loader.py" />
     <Compile Include="src\ingestion\init.py" />
     <Compile Include="src\ingestion\kaggle_loader.py" />
+    <Compile Include="src\profiling\-init-.py" />
+    <Compile Include="src\profiling\perfilador.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
