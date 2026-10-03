@@ -22,6 +22,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="main.py" />
+    <Compile Include="src\ingestion\data_loader.py" />
+    <Compile Include="src\ingestion\init.py" />
+    <Compile Include="src\ingestion\kaggle_loader.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
@@ -42,6 +45,7 @@
   <ItemGroup>
     <Content Include=".env" />
     <Content Include=".gitignore" />
+    <Content Include="data\input\global_ai_jobs_2026.csv" />
     <Content Include="requiremetns.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.env||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:.env||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\main.py||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:main.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\data_loader.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:src\\ingestion\\data_loader.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\init.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:src\\ingestion\\init.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\kaggle_loader.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|solutionrelative:src\\ingestion\\kaggle_loader.py||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F92310E8-F14D-4217-89A4-3E03FB71564A}|SistemaCalidadDatos.pyproj|C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\requiremetns.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
@@ -26,56 +30,69 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": ".gitignore",
-              "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.gitignore",
-              "RelativeDocumentMoniker": ".gitignore",
-              "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.gitignore",
-              "RelativeToolTip": ".gitignore",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAEAAAAAAAAAA==",
-              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF8SURBVDhPjVNLTgJBEG1lwpoFB3GNK9fieA48hD8iwT/ihwgSDAIHgAGXXsEV18CNzL/LquqZdsYM6kteXqcy3fWqpmpNRBgOhyABBEgpAFVKPIMUcYzUyOU\u002BXM/b2qtU3vkSfRjjZTCAMAw1A2LwzdFoBPP5HNqdzuL27n4juibWI\u002BUshBA1DIkhEx9iEorFotgslQqGYbxxAGFEqt1MxmPWJLbLZdZ\u002Bv89q5PMFPiTR6z2zdaxR0fXA0XTBcVywkb4fwHXjRteecIDNQ7UmExVYAdPcxYaqclN46na5WenMKjtlVnTYwcXlVYaDqImW9beD5N/TeGy32QHXm6hZ03ZgiSQHp2fnWQ4oBmJqWSqwAqZpZjt4aLXAD4J0VqyZsmoubfB8H2r1eoaD6NXZ9HcHO\u002BSA3f4AjifXl8rItOETM8ckB9WTWpYD9RdeZ1PWVWAHWXPQaDb59f/w8LiqHeh1pvGkCaP6qB8yXusoxmuNZ7XmII4O9vGuEF86osuDYRkpYQAAAABJRU5ErkJggg==",
-              "WhenOpened": "2026-10-02T22:46:36.998Z",
+              "DocumentIndex": 1,
+              "Title": "data_loader.py",
+              "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\data_loader.py",
+              "RelativeDocumentMoniker": "src\\ingestion\\data_loader.py",
+              "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\data_loader.py",
+              "RelativeToolTip": "src\\ingestion\\data_loader.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-10-03T00:14:57.974Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": ".env",
-              "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.env",
-              "RelativeDocumentMoniker": ".env",
-              "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\.env",
-              "RelativeToolTip": ".env",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-10-02T22:46:01.498Z",
+              "DocumentIndex": 2,
+              "Title": "init.py",
+              "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\init.py",
+              "RelativeDocumentMoniker": "src\\ingestion\\init.py",
+              "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\init.py",
+              "RelativeToolTip": "src\\ingestion\\init.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-10-03T00:14:27.611Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "kaggle_loader.py",
+              "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\kaggle_loader.py",
+              "RelativeDocumentMoniker": "src\\ingestion\\kaggle_loader.py",
+              "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\src\\ingestion\\kaggle_loader.py",
+              "RelativeToolTip": "src\\ingestion\\kaggle_loader.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2026-10-02T23:57:31.162Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "requiremetns.txt",
               "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\requiremetns.txt",
               "RelativeDocumentMoniker": "requiremetns.txt",
               "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\requiremetns.txt",
               "RelativeToolTip": "requiremetns.txt",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
               "WhenOpened": "2026-10-02T22:41:00.542Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "main.py",
               "DocumentMoniker": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\main.py",
               "RelativeDocumentMoniker": "main.py",
               "ToolTip": "C:\\Users\\josef\\source\\repos\\SistemaCalidadDatos\\main.py",
               "RelativeToolTip": "main.py",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAKAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2026-10-02T22:30:34.557Z",
               "EditorCaption": ""
