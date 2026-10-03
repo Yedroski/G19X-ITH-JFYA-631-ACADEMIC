@@ -1,9 +1,5 @@
 from src.ingestion.data_loader import cargar_csv
-from src.profiling.perfilador import (
-    perfil_general,
-    perfil_columnas,
-    estadisticas_numericas
-)
+from src.quality.rules import ejecutar_reglas
 
 
 def main():
@@ -12,19 +8,92 @@ def main():
 
         df = cargar_csv(ruta_archivo)
 
-        perfil_general(df)
+        reglas = [
+            {
+                "tipo": "obligatorio",
+                "columna": "Job_ID"
+            },
+            {
+                "tipo": "unicidad",
+                "columna": "Job_ID"
+            },
+            {
+                "tipo": "obligatorio",
+                "columna": "Job_Title"
+            },
+            {
+                "tipo": "rango",
+                "columna": "Years_of_Experience",
+                "minimo": 0,
+                "maximo": 50
+            },
+            {
+                "tipo": "rango",
+                "columna": "Salary_USD",
+                "minimo": 0
+            },
+            {
+                "tipo": "rango",
+                "columna": "Remote_Work_%",
+                "minimo": 0,
+                "maximo": 100
+            },
+            {
+                "tipo": "rango",
+                "columna": "Hiring_Difficulty_1_10",
+                "minimo": 1,
+                "maximo": 10
+            },
+            {
+                "tipo": "rango",
+                "columna": "Job_Satisfaction_1_10",
+                "minimo": 1,
+                "maximo": 10
+            },
+            {
+                "tipo": "rango",
+                "columna": "Work_Life_Balance_1_10",
+                "minimo": 1,
+                "maximo": 10
+            },
+            {
+                "tipo": "valores_permitidos",
+                "columna": "Job_Type",
+                "valores": [
+                    "Full-time",
+                    "Contract",
+                    "Freelance",
+                    "Part-time"
+                ]
+            },
+            {
+                "tipo": "valores_permitidos",
+                "columna": "Equity_Offered",
+                "valores": [
+                    "Yes",
+                    "No"
+                ]
+            },
+            {
+                "tipo": "valores_permitidos",
+                "columna": "Work_From_Home_Available",
+                "valores": [
+                    "Yes",
+                    "No"
+                ]
+            }
+        ]
 
-        print("\n========== PERFIL POR COLUMNA ==========")
-        perfil = perfil_columnas(df)
-        print(perfil.to_string(index=False))
+        resultados = ejecutar_reglas(df, reglas)
 
-        print("\n========== ESTADÍSTICAS NUMÉRICAS ==========")
-        estadisticas = estadisticas_numericas(df)
+        print("\n========== RESULTADOS DE CALIDAD ==========")
 
-        if estadisticas.empty:
-            print("No se encontraron columnas numéricas.")
-        else:
-            print(estadisticas)
+        for resultado in resultados:
+            print(
+                f"\nRegla: {resultado['regla']}"
+                f"\nColumna: {resultado['columna']}"
+                f"\nErrores: {resultado.get('total_errores', '-')}"
+            )
 
     except Exception as error:
         print(f"Error: {error}")
