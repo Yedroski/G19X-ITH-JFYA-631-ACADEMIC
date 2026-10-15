@@ -1,7 +1,2 @@
-pandas
-numpy
-sqlalchemy
-pyodbc
-python-dotenv
-scikit-learn
-kagglehub
+# Compatibilidad con el nombre usado por el proyecto original.
+-r requirements.txt

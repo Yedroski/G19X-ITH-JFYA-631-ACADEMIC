@@ -60,3 +60,9 @@ def estadisticas_numericas(df):
         return pd.DataFrame()
 
     return columnas_numericas.describe().transpose()
+"""Alias del módulo de perfilado usado por el proyecto de Visual Studio."""
+from src.profiling.profiler import (
+    estadisticas_numericas, perfil_columnas, perfil_general, perfilar,
+)
+
+__all__ = ['estadisticas_numericas', 'perfil_columnas', 'perfil_general', 'perfilar']

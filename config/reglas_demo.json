@@ -1,0 +1,49 @@
+[
+  {
+    "id": "ID_UNICO",
+    "type": "unique",
+    "column": "id"
+  },
+  {
+    "id": "EMAIL",
+    "type": "regex",
+    "column": "email",
+    "pattern": "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"
+  },
+  {
+    "id": "EDAD",
+    "type": "range",
+    "column": "edad",
+    "min": 18,
+    "max": 100
+  },
+  {
+    "id": "ESTADO",
+    "type": "allowed",
+    "column": "estado",
+    "values": [
+      "pagado",
+      "pendiente",
+      "cancelado"
+    ]
+  },
+  {
+    "id": "FECHA",
+    "type": "date",
+    "column": "fecha",
+    "format": "%Y-%m-%d"
+  },
+  {
+    "id": "TOTAL",
+    "type": "compare",
+    "column": "descuento",
+    "other": "total",
+    "op": "<=",
+    "dimension": "consistencia"
+  },
+  {
+    "id": "EMAIL_OBLIGATORIO",
+    "type": "required",
+    "column": "email"
+  }
+]

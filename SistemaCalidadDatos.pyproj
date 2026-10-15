@@ -22,13 +22,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="main.py" />
-    <Compile Include="src\ingestion\data_loader.py" />
-    <Compile Include="src\ingestion\init.py" />
-    <Compile Include="src\ingestion\kaggle_loader.py" />
-    <Compile Include="src\profiling\-init-.py" />
-    <Compile Include="src\profiling\perfilador.py" />
-    <Compile Include="src\quality\--init--.py" />
-    <Compile Include="src\quality\rules.py" />
+    <Compile Include="src\**\*.py" />
+    <Compile Include="tests\**\*.py" />
+    <Compile Include="scripts\**\*.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
@@ -51,6 +47,12 @@
     <Content Include=".gitignore" />
     <Content Include="data\input\global_ai_jobs_2026.csv" />
     <Content Include="requiremetns.txt" />
+    <Content Include="requirements.txt" />
+    <Content Include="README.md" />
+    <Content Include="config\*.json" />
+    <Content Include="docs\*.md" />
+    <Content Include="sql\*.sql" />
+    <Content Include="data\input\demo_clientes.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

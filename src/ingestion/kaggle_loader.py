@@ -1,28 +1,15 @@
-import kagglehub
-import os
-
-
-def descargar_dataset():
+"""Descarga opcional; no se necesita Internet para la demo."""
+def descargar_dataset(nombre='datascikhan/e-commerce-sales-and-customer-analytics'):
     try:
-        path = kagglehub.dataset_download(
-            "datascikhan/e-commerce-sales-and-customer-analytics"
-        )
-
-        print("Dataset descargado correctamente.")
-        print(f"Ruta: {path}")
-
-        return path
-
-    except Exception as error:
-        print(f"Error al descargar el dataset: {error}")
-        return None
+        import kagglehub
+    except ImportError as exc:
+        raise RuntimeError('Instala la dependencia opcional: pip install kagglehub') from exc
+    return kagglehub.dataset_download(nombre)
 
 
 def listar_archivos(ruta):
-    if ruta is None:
-        return
-
-    print("\nArchivos encontrados:")
-
-    for archivo in os.listdir(ruta):
-        print(f"- {archivo}")
+    """Compatibilidad con la utilidad original, sin descargar al importar."""
+    from pathlib import Path
+    if ruta is not None:
+        for archivo in sorted(Path(ruta).iterdir()):
+            print(f'- {archivo.name}')

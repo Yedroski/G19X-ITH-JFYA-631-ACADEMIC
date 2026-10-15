@@ -1,0 +1,231 @@
+Sistema Inteligente de Calidad de datos
+
+	QUE ES LA CALIDAD DE DATOS??
+
+la calidad de datos es uno de los principales problemas de las empresas es decir que los datos sean limpios,
+que determina que los datos sean de calidad?? se refiere a la medida en que los datos son adecuados para su
+uso previsto y como se logra esto?? cumpliendo con las siguientes caracteristicas
+
+PRECISION:Indica qué tan fielmente los datos guardados reflejan la realidad o el valor verdadero
+
+INTEGRIDAD: Asegura que no falte información requerida y que se mantenga las relaciones lógicas entre
+las distintas tablas y sistemas
+
+CONSISTENCIA:no varian los formatos entre registros por ejemplo formatos diferentes de fechas entre
+registros o tablas
+
+FIABILIDAD: grado de confianza, un dato es fiable si su origen es conocido y verificable, proviene de una fuente 
+autorizada y se procesó mediante reglas de negocio estables y auditables
+
+Actualidad de datos: depende que tan oportunos son los datos en relación con el momoento en que se necesitan para 
+operar o tomar decisiones es decir, refleja el estado presente del fenómeno que se está midiendo 
+
+	PROPOSITO 
+el propósito de la calidad de datos es asegurar que los dato de una organiación sean confiables y adecuados para el 
+uso que se les quiere dar (como ya se vio en la defincion de calidad de datos) entonce la calidad de datos busca que 
+una empresa pueda confiar en su información, para operar y tomar decisiones. Datos de mala calidad pueden provocar reportes
+incorrectos, decisiones equivocadas, errores en procesos, duplicación de trabajo y problemas en análisis posteriores
+
+	QUE ES LO QUE TENGO QUE HACER?
+en la delimitacion del proyecto dice que el sistema usara IA para evaluar continuamente la calidad de datos
+
+que modelo usare?? primero voy a ver si lo integrare en el prototipo o lo dejare para que despues escale
+para evaluar en tiempo real los datos, por mientras lo dejare para que evalue por lotes usando pandas(libreria para
+la manipulacion y analisis de datos) para que detecte duplicados, insositencias, valores faltantes etc...
+
+No se evalua en tiempo real por varias razones la mayor y de mas importante es que: es muy costoso; mas que
+por lotes y para proposito de este proyecto se dejara como una posibilidad a futuro
+
+Idealmente se tendría que preguntar al cliente
+
+1.-De dónde provienen los datos??
+2.-cual es el volumen de los datos(GB/TB)??
+3.-Cada cuánto cambian??
+4.-existen reglas de calidad de datos?? 
+5.-quién determina que un dato es correcto?? cuales reglas del negocio determinan que ese dato es de calidad??
+6.-Hay información historica suficiente para establecer un comportamiento normal?? 
+la informacion historica esta depurada??
+7.-El sistema solamente recomienda o puede modificar datos?? si es así acuales si puede modificar??
+8.-hay datos personales/sensibles??
+9.-quién es el data owner y data steward??
+10.-Por donde se realizaran las alertas??
+11.-para quien va dirigido el dashboard??
+
+Pero como no tengo estos datos se tienen que avanzar declarando supuestos y diseñar un entorno fictiocio
+que se puedo acercar mas a la realidad
+
+entonces lo que se va a realizar es simular proovedores de datos, ya hay datsets gratuitos en al web
+esto ya me da algo con que trabajar brindandome implicitamente tambien el volumen de datos
+
+	ALCANCE
+
+El sistema permitirá evaluar la calidad de un archivo de datos tabular, inicialmente en formato CSV, 
+mediante un proceso automatizado de perfilado y validación
+
+	FLUJO DEL SISTEMA
+
+DATOS SINTÉTICOS -> INGESTA -> PERFILADO -> MOTOR DE REGLAS -> 
+(valores faltantes, duplicados, formatos, consistencia, integridad anomalías)
+->Quality Score -> (Recomendaciones, historial, incidencias) -> Dashboard ejecutivo
+
+
+REQUERIMIENTOS
+
+| ID | Requerimiento funcional | Prioridad |
+|---|---|---|
+| RF-01 | El sistema deberá permitir al usuario cargar un archivo CSV. | Alta |
+| RF-02 | El sistema deberá validar que el archivo cargado tenga un formato soportado. | Alta |
+| RF-03 | El sistema deberá mostrar el número de filas y columnas del dataset. | Alta |
+| RF-04 | El sistema deberá identificar automáticamente el tipo de dato predominante de cada columna. | Alta |
+| RF-05 | El sistema deberá calcular la cantidad y porcentaje de valores nulos por columna. | Alta |
+| RF-06 | El sistema deberá calcular la cantidad de valores únicos por columna. | Media |
+| RF-07 | El sistema deberá detectar registros duplicados. | Alta |
+| RF-08 | El sistema deberá generar estadísticas descriptivas para columnas numéricas. | Alta |
+| RF-09 | El sistema deberá mostrar ejemplos o distribuciones básicas de los valores encontrados. | Media |
+| RF-10 | El sistema deberá permitir definir reglas básicas de calidad. | Alta |
+| RF-11 | El sistema deberá evaluar el dataset utilizando las reglas configuradas. | Alta |
+| RF-12 | El sistema deberá identificar los registros que incumplen una regla. | Alta |
+| RF-13 | El sistema deberá detectar valores numéricos potencialmente anómalos mediante técnicas estadísticas básicas. | Media |
+| RF-14 | El sistema deberá calcular un indicador general de calidad del dataset. | Alta |
+| RF-15 | El sistema deberá mostrar los resultados de calidad mediante un dashboard. | Alta |
+| RF-16 | El sistema deberá mostrar los principales problemas encontrados en el dataset. | Alta |
+| RF-17 | El sistema deberá generar recomendaciones básicas para corregir los problemas detectados. | Media |
+| RF-18 | El sistema deberá permitir consultar el detalle de los errores encontrados. | Media |
+| RF-19 | El sistema deberá almacenar los resultados principales de una ejecución para su consulta posterior. | Baja / si hay tiempo |
+
+REQUERIMIENTOS NO FUNCIONALES
+
+| ID | Requerimiento funcional | Prioridad |
+|---|---|---|
+| RF-01 | El sistema deberá permitir al usuario cargar un archivo CSV. | Alta |
+| RF-02 | El sistema deberá validar que el archivo cargado tenga un formato soportado. | Alta |
+| RF-03 | El sistema deberá mostrar el número de filas y columnas del dataset. | Alta |
+| RF-04 | El sistema deberá identificar automáticamente el tipo de dato predominante de cada columna. | Alta |
+| RF-05 | El sistema deberá calcular la cantidad y porcentaje de valores nulos por columna. | Alta |
+| RF-06 | El sistema deberá calcular la cantidad de valores únicos por columna. | Media |
+| RF-07 | El sistema deberá detectar registros duplicados. | Alta |
+| RF-08 | El sistema deberá generar estadísticas descriptivas para columnas numéricas. | Alta |
+| RF-09 | El sistema deberá mostrar ejemplos o distribuciones básicas de los valores encontrados. | Media |
+| RF-10 | El sistema deberá permitir definir reglas básicas de calidad. | Alta |
+| RF-11 | El sistema deberá evaluar el dataset utilizando las reglas configuradas. | Alta |
+| RF-12 | El sistema deberá identificar los registros que incumplen una regla. | Alta |
+| RF-13 | El sistema deberá detectar valores numéricos potencialmente anómalos mediante técnicas estadísticas básicas. | Media |
+| RF-14 | El sistema deberá calcular un indicador general de calidad del dataset. | Alta |
+| RF-15 | El sistema deberá mostrar los resultados de calidad mediante un dashboard. | Alta |
+| RF-16 | El sistema deberá mostrar los principales problemas encontrados en el dataset. | Alta |
+| RF-17 | El sistema deberá generar recomendaciones básicas para corregir los problemas detectados. | Media |
+| RF-18 | El sistema deberá permitir consultar el detalle de los errores encontrados. | Media |
+| RF-19 | El sistema deberá almacenar los resultados principales de una ejecución para su consulta posterior. | Baja / si hay tiempo |
+
+
+| Métrica | Qué mide | Fórmula sugerida |
+|---|---|---|
+| **Completitud** | Qué porcentaje de datos obligatorios está presente | `(campos no nulos / campos evaluados) × 100` |
+| **Validez** | Qué porcentaje cumple las reglas definidas | `(registros válidos / registros evaluados) × 100` |
+| **Unicidad** | Qué porcentaje de registros no está duplicado | `(registros únicos / registros totales) × 100` |
+| **Consistencia** | Qué porcentaje no presenta contradicciones entre campos | `(registros consistentes / registros evaluados) × 100` |
+| **Exactitud** | Qué porcentaje de datos coincide con una fuente o valor esperado | `(datos correctos / datos verificados) × 100` |
+| **Quality Score** | Indicador global de calidad | Promedio ponderado de las métricas anteriores |
+
+Quality Score
+Esta debería ser la métrica principal de tu sistema.
+Puedes combinar las diferentes dimensiones.
+Para el MVP se utilizara:
+
+\[
+QualityScore =
+0.30C +
+0.30V +
+0.20U +
+0.20I
+\]
+donde:
+- C: Completitud
+- V: Validez
+- U: Unicidad
+- I: Consistencia
+
+
+Indicadores adicionales útiles
+Además de las métricas porcentuales, tu dashboard debería mostrar algunos KPIs operativos:
+- Total de registros analizados.
+- Total de columnas.
+- Total de valores nulos.
+- Total de registros duplicados.
+- Total de reglas ejecutadas.
+- Total de reglas incumplidas.
+- Total de registros con errores.
+- Porcentaje de registros con al menos un problema.
+- Número de anomalías detectadas.
+- Tiempo total de análisis.
+
+
+RESTRICCIONES:
+
+| ID | Restricción | Descripción |
+|---|---|---|
+| R-02 | **Alcance limitado** | El sistema se enfocará en análisis básico de calidad de datos: completitud, validez, unicidad, consistencia y cálculo del Quality Score. |
+| R-03 | **Fuente de datos limitada** | En la primera versión, el sistema procesará principalmente archivos **CSV**, dejando integraciones con bases de datos o APIs para versiones futuras. |
+| R-04 | **Procesamiento batch** | El análisis se realizará bajo demanda sobre archivos cargados por el usuario. No se implementará procesamiento en tiempo real ni streaming. |
+| R-05 | **Volumen de datos** | El MVP estará orientado a datasets pequeños y medianos, con un límite objetivo cercano a **100,000 registros**, sujeto a los recursos disponibles. |
+| R-06 | **Recursos computacionales** | El rendimiento dependerá de la capacidad del equipo o servidor donde se ejecute la aplicación. No se utilizará infraestructura distribuida. |
+| R-07 | **Reglas de calidad limitadas** | Se implementará un conjunto reducido de reglas configurables, como campos obligatorios, rangos, formatos, valores permitidos y unicidad. |
+| R-08 | **Exactitud limitada** | El sistema no podrá determinar automáticamente si un dato representa correctamente la realidad cuando no exista una fuente externa de referencia. |
+| R-09 | **Detección de anomalías básica** | En caso de implementarse, la detección de anomalías utilizará métodos estadísticos simples y no modelos avanzados de Machine Learning. |
+| R-10 | **Sin corrección automática** | El sistema identificará problemas y podrá sugerir acciones, pero no modificará automáticamente los datos originales. |
+| R-11 | **Interfaz simplificada** | El dashboard tendrá únicamente las vistas necesarias para mostrar métricas, errores y resultados principales del análisis. |
+| R-12 | **Seguridad básica** | El MVP no incluirá mecanismos avanzados como SSO, MFA, gestión compleja de roles o integración con sistemas corporativos de identidad. |
+| R-13 | **Usuarios limitados** | La primera versión no estará diseñada para una gran cantidad de usuarios concurrentes. |
+| R-14 | **Persistencia limitada** | El histórico de análisis será básico o podrá omitirse si el tiempo de desarrollo no permite completar esta funcionalidad. |
+| R-15 | **Compatibilidad de datos** | El sistema estará enfocado principalmente en datos tabulares estructurados. No se analizarán imágenes, audio, video ni documentos no estructurados. |
+| R-16 | **Dependencia de reglas de negocio** | Algunas validaciones requerirán reglas definidas previamente por usuarios de negocio, Data Stewards o responsables de los datos. |
+
+ARQUITECTURA
+
+┌──────────────────────────────┐
+│        Capa de Presentación  │
+│   Dashboard / Interfaz graf  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      Capa de Aplicación      │
+│                              │
+│ • Carga de archivos          │
+│ • Perfilado de datos         │
+│ • Motor de reglas            │
+│ • Detección de duplicados    │
+│ • Detección de anomalías     │
+│ • Quality Score              │
+│ • Recomendaciones            │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│       Capa de Datos          │
+│                              │
+│ • Archivos CSV               │
+│ • Resultados de análisis     │
+│ • Reglas configuradas        │
+│ • Histórico básico           │
+└──────────────────────────────┘
+
+
+
+STACHK TECNOLOGICO
+
+| Componente | Tecnología | Uso |
+|---|---|---|
+| **Lenguaje** | Python 3.11+ | Lógica principal del sistema |
+| **Interfaz gráfica** | PySide6 | Aplicación de escritorio |
+| **Procesamiento de datos** | Pandas | Lectura, perfilado y análisis de datos |
+| **Cálculo numérico** | NumPy | Estadísticas y detección básica de anomalías |
+| **Visualización** | Matplotlib | Gráficas y métricas de calidad |
+| **Base de datos** | **SQL Server** | Reglas, ejecuciones, métricas, resultados e histórico |
+| **Conexión a BD** | SQLAlchemy + pyodbc | Comunicación entre Python y SQL Server |
+| **Validación** | Pydantic | Validación de configuraciones y estructuras |
+| **Pruebas** | Pytest | Pruebas unitarias |
+| **Empaquetado** | PyInstaller | Generación del ejecutable |
+| **Control de versiones** | Git + GitHub | Gestión del código |
+
+
