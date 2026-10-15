@@ -29,6 +29,7 @@ La solución `SistemaCalidadDatos.slnx` y su proyecto se conservan. En Visual St
 - Quality Score: 30% completitud, 30% validez, 20% unicidad y 20% consistencia; muestra cobertura cuando faltan dimensiones.
 - Recomendaciones, incidencias, historial transaccional y exportación JSON/CSV.
 - Compatibilidad con `cargar_csv`, `ejecutar_reglas`, validadores en español y funciones originales de perfilado.
+- Monitoreo experimental por sondeo de CSV, con alertas locales, actualización del dashboard y últimos 100 resultados de sesión.
 
 La fuente permanece intacta. El límite es 100 MB y 100 000 registros por CSV; los conteos son completos y el detalle se limita a 2 000 incidencias. IQR señala valores a investigar, sin modificar el score ni corregir datos.
 
@@ -38,4 +39,22 @@ Sigue [SQL_SERVER.md](docs/SQL_SERVER.md), configura tu `.env` sin sobrescribirl
 
 La consola devuelve 0 si guarda el análisis, 1 por entrada/configuración inválida y 2 si genera el reporte sin persistencia. Opciones: `--keys id,sucursal`, `--sep ";"`, `--encoding cp1252`, `--output reports` y `--init-db`.
 
-Consulta [arquitectura](docs/ARQUITECTURA.md), [métricas y reglas](docs/METRICAS_Y_REGLAS.md), [integración](docs/INTEGRACION.md) y la copia del [PRD recibido](docs/PRD_ORIGINAL.txt).
+## Monitoreo experimental
+
+En la pestaña **Tiempo real · Experimental**, configura intervalo, estabilidad mínima y umbral; pulsa **Iniciar monitoreo**. Usa el CSV y las reglas seleccionados arriba. **Detener** permite cambiar la configuración. Cada versión estable actualiza las métricas y se guarda si hay conexión a la base.
+
+También puedes ejecutarlo por consola:
+
+```powershell
+.\.venv311\Scripts\python.exe main.py --demo --csv data/input/stream_demo.csv --rules config/reglas_demo.json --watch --interval 2 --stability 1 --threshold 90
+```
+
+En otra terminal, publica datos sintéticos en esa ruta nueva:
+
+```powershell
+.\.venv311\Scripts\python.exe scripts/simular_tiempo_real.py --salida data/input/stream_demo.csv --eventos 12 --intervalo 3
+```
+
+Ctrl+C detiene la consola. Se trata de monitoreo cercano al tiempo real de archivos locales: cada cambio se analiza como un lote completo; puede omitir versiones intermedias entre sondeos. Consulta [operación y límites](docs/MONITOREO_EXPERIMENTAL.md).
+
+Consulta [PRD actualizado](docs/PRD.md), [arquitectura](docs/ARQUITECTURA.md), [métricas y reglas](docs/METRICAS_Y_REGLAS.md), [integración](docs/INTEGRACION.md), [pruebas](docs/PRUEBAS.md) y la copia del [PRD recibido](docs/PRD_ORIGINAL.txt).

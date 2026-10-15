@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
     QHeaderView, QAbstractItemView)
 from src.service import ejecutar
 from src.exporter import exportar
+from src.dashboard.monitor import MonitorPanel, MonitorWorker
+from src.monitoring.monitor import MonitorCSV
 
 class Worker(QThread):
     success = Signal(object)
@@ -39,6 +41,7 @@ def fill(t, rows):
 class Window(QMainWindow):
     def __init__(self, repo=None, demo=False, db_error=''):
         super().__init__(); self.repo=repo; self.report=None; self.worker=None
+        self.monitor_worker=None; self.close_pending=False
         self.setWindowTitle('SistemaCalidadDatos · Calidad y monitoreo'); self.resize(1280,850)
         root=QWidget(); self.setCentralWidget(root); layout=QVBoxLayout(root)
         title=QLabel('CALIDAD DE DATOS  /  Laboratorio de análisis'); title.setObjectName('title');layout.addWidget(title)
@@ -82,6 +85,11 @@ class Window(QMainWindow):
         hl.addWidget(refresh);hl.addWidget(QLabel('Doble clic para recuperar un análisis. Compara solo archivos y reglas equivalentes.'))
         self.history=table([]);self.history.cellDoubleClicked.connect(self.open_history);hl.addWidget(self.history)
         self.tabs.addTab(history_page,'Histórico');self.refresh()
+        self.monitor_panel=MonitorPanel()
+        self.monitor_panel.start_requested.connect(self.start_monitor)
+        self.monitor_panel.stop_requested.connect(self.stop_monitor)
+        self.tabs.addTab(self.monitor_panel,'Tiempo real · Experimental')
+        self.configuration_widgets=[self.path,choose,self.sep,self.encoding,self.keys,self.anomalies,rule_page]
         self.setStyleSheet("""
             QMainWindow, QWidget { background:#f3f6fb; color:#192c45; font-size:13px; }
             QLabel#title { font-size:23px; font-weight:700; padding:12px 0; }
@@ -113,20 +121,25 @@ class Window(QMainWindow):
             try:Path(p).write_text(json.dumps(content,ensure_ascii=False,indent=2),encoding='utf-8')
             except OSError:QMessageBox.warning(self,'Reglas','No se pudo guardar el archivo.')
     def start(self):
+        if self.monitor_worker and self.monitor_worker.isRunning():return
         if self.worker and self.worker.isRunning():return
         try:rules=json.loads(self.editor.toPlainText())
         except ValueError:QMessageBox.warning(self,'Reglas','JSON inválido.');return
         sep=self.sep.currentText();sep=None if sep=='Auto' else '\t' if sep=='Tab' else sep
         self.run.setEnabled(False);self.progress.setRange(0,0)
+        self.monitor_panel.start_button.setEnabled(False)
+        if self.worker:self.worker.deleteLater()
         self.worker=Worker(dict(path=self.path.text(),rules=rules,repo=self.repo,
             keys=[v.strip() for v in self.keys.text().split(',') if v.strip()],
             anomalies=self.anomalies.isChecked(),sep=sep,encoding=self.encoding.currentText()))
+        self.worker.setParent(self)
         self.worker.success.connect(self.show_report);self.worker.failure.connect(self.failure)
         self.worker.finished.connect(self.done);self.worker.start()
     def done(self):
         self.progress.setRange(0,1);self.progress.setValue(1);self.run.setEnabled(True)
+        self.monitor_panel.start_button.setEnabled(True)
     def failure(self,message):QMessageBox.warning(self,'No se completó el análisis',message)
-    def show_report(self,r):
+    def show_report(self,r,navigate=True,refresh_history=True):
         self.report=r;self.score.setText(f"{r['score']:.2f} / 100   ·   {r['alerta']}")
         self.summary.setText(f"{r['fuente']}   |   {r['filas']:,} registros   |   {r['columnas']} columnas   |   "
                              f"{r['faltantes']} celdas faltantes   |   {r['duplicados']} duplicados excedentes   |   {r['segundos']:.3f} s (motor)")
@@ -138,7 +151,44 @@ class Window(QMainWindow):
                             f"Incidencias: {sum(r['conteos'].values())}; muestra visible/exportable: {len(r['incidencias'])}. "
                             'Las anomalías son indicios y no afectan el score. '+
                             (r.get('error_bd','') or ('Histórico guardado.' if r.get('guardado') else 'Sin guardar en base de datos.')))
-        fill(self.profile,r['perfil']);fill(self.rules_result,r['resultados_reglas']);self.filter_issues();self.tabs.setCurrentIndex(0);self.refresh()
+        fill(self.profile,r['perfil']);fill(self.rules_result,r['resultados_reglas']);self.filter_issues()
+        if navigate:self.tabs.setCurrentIndex(0)
+        if refresh_history:self.refresh()
+    def start_monitor(self):
+        if (self.worker and self.worker.isRunning()) or (self.monitor_worker and self.monitor_worker.isRunning()):return
+        try:
+            rules=json.loads(self.editor.toPlainText())
+            if not self.path.text().strip():raise ValueError('Selecciona un archivo CSV para monitorear.')
+            sep=self.sep.currentText();sep=None if sep=='Auto' else '\t' if sep=='Tab' else sep
+            monitor=MonitorCSV(self.path.text(),rules,self.repo,
+                keys=[v.strip() for v in self.keys.text().split(',') if v.strip()],
+                anomalies=self.anomalies.isChecked(),sep=sep,encoding=self.encoding.currentText(),
+                interval=self.monitor_panel.interval.value(),stable_seconds=self.monitor_panel.stability.value(),
+                threshold=self.monitor_panel.threshold.value())
+        except (ValueError,TypeError,KeyError) as exc:
+            QMessageBox.warning(self,'Monitoreo',str(exc));return
+        self.monitor_panel.clear_session();self.monitor_panel.set_running(True)
+        self.run.setEnabled(False)
+        for widget in self.configuration_widgets:widget.setEnabled(False)
+        if self.monitor_worker:self.monitor_worker.deleteLater()
+        self.monitor_worker=MonitorWorker(monitor,self)
+        self.monitor_worker.update.connect(self.monitor_update)
+        self.monitor_worker.finished.connect(self.monitor_done)
+        self.monitor_worker.start()
+    def stop_monitor(self):
+        if self.monitor_worker and self.monitor_worker.isRunning():
+            self.monitor_worker.stop()
+            self.monitor_panel.stop_button.setEnabled(False)
+            self.monitor_panel.status.setText('Deteniendo; esperando que finalice el análisis en curso…')
+    def monitor_update(self,event):
+        self.monitor_panel.show_event(event)
+        if event.get('reporte'):self.show_report(event['reporte'],navigate=False,refresh_history=False)
+    def monitor_done(self):
+        self.monitor_panel.set_running(False);self.run.setEnabled(True)
+        for widget in self.configuration_widgets:widget.setEnabled(True)
+        self.monitor_panel.status.setText('Detenido · '+self.monitor_panel.status.text())
+        if self.close_pending:self.close()
+        else:self.refresh()
     def filter_issues(self):
         if self.report:
             q=self.filter.text().casefold();fill(self.issues,[r for r in self.report['incidencias'] if q in str(r).casefold()])
@@ -157,7 +207,9 @@ class Window(QMainWindow):
                 dest=exportar(self.report,p);QMessageBox.information(self,'Exportado',str(dest))
             except Exception:QMessageBox.warning(self,'Exportar','No se pudo escribir el reporte.')
     def closeEvent(self,event):
-        if self.worker and self.worker.isRunning():
+        if self.monitor_worker and self.monitor_worker.isRunning():
+            self.close_pending=True;self.stop_monitor();event.ignore()
+        elif self.worker and self.worker.isRunning():
             QMessageBox.information(self,'Análisis en curso','Espera a que termine el análisis antes de cerrar.');event.ignore()
         else:event.accept()
 

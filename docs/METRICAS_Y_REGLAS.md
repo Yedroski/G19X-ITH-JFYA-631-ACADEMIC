@@ -1,6 +1,6 @@
 # Métricas y semántica de evaluación
 
-Se adopta la ponderación más reciente recuperada del proyecto: **30% completitud, 30% validez, 20% unicidad, 20% consistencia**. La versión anterior 30/25/20/25 no se usa. Los pesos están centralizados en `src/quality/engine.py`.
+Se utiliza la ponderación del PRD: **30% completitud, 30% validez, 20% unicidad, 20% consistencia**. Los pesos están centralizados en `src/quality/engine.py`.
 
 | Dimensión | Cálculo |
 |---|---|
@@ -44,6 +44,8 @@ Cada regla necesita `id` único, `type` y `column`. `dimension` es opcional (`va
 
 `range` es inclusivo y puede tener solo un límite. `regex` exige coincidencia completa. `compare` es una comparación numérica entre dos columnas y admite `<=`, `>=`, `==`; no interpreta fórmulas arbitrarias. `date` usa la semántica de parsing de Pandas con formato explícito. Una configuración inválida detiene el análisis, no se ignora silenciosamente.
 
+`compare` admite además `"value_type":"date"` junto con `"format":"%Y-%m-%d"` para comparar fechas. Los valores presentes no convertibles y los números infinitos fallan sus reglas. Los límites deben ser finitos. También se aceptan las reglas originales con `tipo`, `columna`, `minimo`, `maximo`, `valores`, `columna_izquierda/derecha` y `columna_inicio/fin`; se normalizan antes del análisis. Ejemplo completo: `config/reglas_empleos.json`.
+
 Guarda los JSON desde la interfaz para reutilizarlos. Cada ejecución almacena un snapshot y hash de sus reglas; editar un archivo no cambia análisis anteriores. No se incluye un catálogo central de reglas con roles o aprobaciones.
 
 ## Anomalías exploratorias
@@ -53,3 +55,5 @@ IQR marca valores numéricos fuera de `[Q1−1.5 IQR, Q3+1.5 IQR]`. Requiere al 
 ## Muestras y límites
 
 Se calculan conteos sobre el archivo completo y se conservan hasta 2 000 incidencias detalladas en total, en orden: faltantes, duplicados, reglas, anomalías. En archivos con muchos problemas, la muestra puede agotarse antes de las últimas categorías; los resúmenes de reglas y conteos siguen completos. El filtro de interfaz solo consulta la muestra. JSON guarda `muestra_limitada` y `conteos`. Para análisis exhaustivo por registro se necesita ampliar este diseño a almacenamiento/paginación de incidencias.
+
+`registros_con_errores` y su porcentaje cuentan posiciones únicas afectadas, independientemente del límite de muestra; incluyen anomalías si están activas. `reglas_incumplidas` cuenta reglas con uno o más fallos. El perfil añade porcentaje de nulos, media, desviación muestral, cuartiles, mediana, ejemplos y frecuencias; los cálculos numéricos excluyen valores no convertibles o no finitos. El tipo inferido exige mayoría estricta entre los valores no nulos (numérico, fecha ISO, booleano; en otro caso texto). No se convierte el CSV original.
