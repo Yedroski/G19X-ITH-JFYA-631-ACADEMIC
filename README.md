@@ -1,5 +1,7 @@
 # SistemaCalidadDatos
 
+Proyecto académico TODO Academy. Repositorio: [G19X-ITH-JFYA-631-ACADEMIC](https://github.com/Yedroski/G19X-ITH-JFYA-631-ACADEMIC).
+
 Aplicación de escritorio y consola para evaluar CSV con Python, Pandas, PySide6 y SQL Server. Integra las funcionalidades de `SistemaCalidadDatos_Referencia` sobre el historial del proyecto original.
 
 ## Inicio en Windows
