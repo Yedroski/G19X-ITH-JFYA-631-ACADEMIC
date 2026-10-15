@@ -1,0 +1,45 @@
+{
+  "fecha_utc": "2026-10-15T18:48:18.382949+00:00",
+  "python": "3.11.0",
+  "sistema": "Windows",
+  "maquina": "AMD64",
+  "alcance": "Carga, analisis IQR y guardado SQLite; excluye generacion, inicio Python y exportacion.",
+  "casos": [
+    {
+      "filas": 10000,
+      "columnas": 7,
+      "segundos_totales": [
+        0.7643,
+        0.7496,
+        0.7553
+      ],
+      "mediana_segundos": 0.7553,
+      "segundos_motor": [
+        0.5634,
+        0.5539,
+        0.5556
+      ],
+      "score": 97.4145,
+      "cobertura": 100,
+      "muestra": 2000
+    },
+    {
+      "filas": 100000,
+      "columnas": 7,
+      "segundos_totales": [
+        6.2252,
+        6.2923,
+        6.2098
+      ],
+      "mediana_segundos": 6.2252,
+      "segundos_motor": [
+        4.9287,
+        5.0825,
+        4.8978
+      ],
+      "score": 97.4165,
+      "cobertura": 100,
+      "muestra": 2000
+    }
+  ]
+}

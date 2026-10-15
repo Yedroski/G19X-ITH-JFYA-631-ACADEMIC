@@ -33,6 +33,8 @@ La solución `SistemaCalidadDatos.slnx` y su proyecto se conservan. En Visual St
 
 La fuente permanece intacta. El límite es 100 MB y 100 000 registros por CSV; los conteos son completos y el detalle se limita a 2 000 incidencias. IQR señala valores a investigar, sin modificar el score ni corregir datos.
 
+La descarga de Kaggle sigue disponible en `src/ingestion/kaggle_loader.py`; es opcional y requiere instalar `kagglehub` en el entorno. La demo y el CSV original funcionan sin esa descarga.
+
 ## SQL Server y documentación
 
 Sigue [SQL_SERVER.md](docs/SQL_SERVER.md), configura tu `.env` sin sobrescribirlo y ejecuta `iniciar_sqlserver.bat`. `--demo` habilita SQLite explícitamente; nunca se usa como sustitución silenciosa de SQL Server.
