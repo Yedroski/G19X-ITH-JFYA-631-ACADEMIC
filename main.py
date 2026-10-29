@@ -47,6 +47,7 @@ def main(argv=None):
     load_dotenv(ROOT / '.env')
     parser = argparse.ArgumentParser(description='SistemaCalidadDatos · Escritorio / CLI')
     parser.add_argument('--demo', action='store_true', help='Usar SQLite explícitamente para demo')
+    parser.add_argument('--mvp', action='store_true', help='Abrir la interfaz guiada del MVP')
     parser.add_argument('--init-db', action='store_true', help='Crear tablas en la base configurada')
     parser.add_argument('--csv')
     parser.add_argument('--rules', default=None)
@@ -61,6 +62,8 @@ def main(argv=None):
     parser.add_argument('--threshold', type=float, default=90, help='Umbral de alerta del monitor, 0 a 100')
     parser.add_argument('--max-polls', type=int, help='Detener tras N sondeos (para pruebas o ejecución acotada)')
     args = parser.parse_args(argv)
+    if args.mvp and (args.csv or args.watch or args.init_db):
+        parser.error('--mvp abre la interfaz y no se combina con --csv, --watch ni --init-db.')
     if args.watch and (not args.csv or args.init_db):
         parser.error('--watch requiere --csv y no se combina con --init-db.')
     if args.max_polls is not None and (not args.watch or args.max_polls < 1):
@@ -97,7 +100,10 @@ def main(argv=None):
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 print(f'No se completó el análisis: {exc}')
                 return 1
-        from src.dashboard.app import launch
+        if args.mvp:
+            from src.dashboard.mvp import launch
+        else:
+            from src.dashboard.app import launch
         return launch(repo, args.demo, error)
     finally:
         if repo is not None:

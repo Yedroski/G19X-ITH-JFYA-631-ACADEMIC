@@ -3,24 +3,9 @@ os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 import json
 import time
 from pathlib import Path
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QCoreApplication, QEvent
 from PySide6.QtTest import QTest
-import pytest
 from src.dashboard.app import Window
 from src.database.repository import Repository
-
-
-@pytest.fixture(scope='module')
-def qt_app():
-    # Una sola QApplication; destruir widgets antes de liberar Qt en Windows.
-    app = QApplication.instance() or QApplication([])
-    yield app
-    for widget in app.topLevelWidgets():
-        widget.close()
-        widget.deleteLater()
-    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    app.processEvents()
 
 
 def test_flujo_gui(tmp_path, qt_app):

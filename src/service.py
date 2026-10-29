@@ -16,8 +16,10 @@ def guardar_reporte(report, repo=None):
     return report
 
 
-def ejecutar(path, rules, repo=None, keys=None, anomalies=False, sep=None, encoding='utf-8-sig'):
+def ejecutar(path, rules, repo=None, keys=None, anomalies=False, sep=None, encoding='utf-8-sig', expected_sha256=None):
     df, digest, _ = cargar_snapshot(path, sep, encoding)
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise ValueError('El CSV cambió desde la vista previa. Vuelve a cargarlo antes de analizar.')
     report = analizar(df, rules, Path(path).name, keys, anomalies)
     report['sha256'] = digest
     report['ingestion'] = {'encoding': encoding, 'separador': sep or 'auto'}
