@@ -4,13 +4,15 @@ El módulo observa un archivo CSV local y analiza sus versiones estables. Reutil
 
 ## Interfaz
 
-1. Selecciona un CSV y configura sus reglas, claves, codificación y anomalías.
+1. Carga un CSV en **Datos** y configura reglas, clave y anomalías en **Reglas**. IQR e Isolation Forest pueden activarse independientemente; el modelo y las columnas seleccionadas se conservan en la sesión.
 2. Abre **Tiempo real · Experimental**.
 3. Configura **Consultar cada** (2 s por defecto), **Estabilidad mínima** (1 s) y **Alertar bajo** (90/100).
 4. Pulsa **Iniciar monitoreo**. Se muestra la última observación, errores de lectura y una tabla con las últimas 100 versiones de la sesión. Dashboard y tablas se actualizan con cada reporte.
 5. Pulsa **Detener** para editar las opciones. Cerrar la ventana solicita detener el monitor y espera a que el análisis activo termine; no destruye un hilo en ejecución.
 
-Las opciones y reglas se copian al inicio de cada sesión. No se permite ejecutar análisis manual y monitoreo simultáneamente en la misma ventana. El histórico se actualiza al detener o al pulsar su botón; no se consulta SQL Server desde la interfaz en cada sondeo. Los resultados se pueden exportar desde Dashboard. El indicador de cobertura acompaña al score: un 100 con cobertura parcial no confirma todas las dimensiones.
+Las opciones y reglas se copian al inicio de cada sesión. No se permite ejecutar análisis manual y monitoreo simultáneamente en la misma ventana. Tras detener, abre Histórico o pulsa su botón para consultar; las consultas usan un trabajador, sin consultar SQL Server en cada sondeo. Detén el monitor para exportar desde Resultados. Si el CSV cambió, vuelve a cargarlo antes de un análisis manual: la vista previa conserva su hash original. El indicador de cobertura acompaña al score: un 100 con cobertura parcial no confirma todas las dimensiones.
+
+Isolation Forest se ajusta de nuevo en cada versión estable; los umbrales aprendidos pueden cambiar entre lotes. La alerta del monitor sigue dependiendo del Quality Score y no del número de anomalías; estas se consultan en Resultados → Detección inteligente. No hay aprendizaje continuo ni detección de deriva.
 
 ## Consola y simulación
 
@@ -19,6 +21,8 @@ Las opciones y reglas se copian al inicio de cada sesión. No se permite ejecuta
 ```
 
 El archivo puede aparecer después de iniciar el monitor. En otra terminal:
+
+Esto aplica a la consola; la interfaz requiere cargar una primera versión válida antes de iniciar.
 
 ```powershell
 .\.venv311\Scripts\python.exe scripts/simular_tiempo_real.py --salida data/input/stream_demo.csv --eventos 12 --intervalo 3

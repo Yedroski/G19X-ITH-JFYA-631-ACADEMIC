@@ -2,7 +2,7 @@
 
 Capas: presentación (`dashboard`) → servicio (`service.py`) → dominio (`profiling`, `quality`, `anomalies`, `remediation`) → persistencia (`database`). El cargador y el exportador son adaptadores de entrada/salida. La interfaz no contiene fórmulas de calidad.
 
-El trabajador QThread carga, analiza y guarda; entrega el reporte por señales. Solo el hilo principal actualiza widgets. Se impide cerrar la ventana durante un análisis manual. El monitor experimental usa otro QThread secuencial y un Event para detener la espera: al cerrar, termina el análisis activo antes de liberar la ventana. Ambos modos se excluyen en la misma ventana. Los trabajadores pertenecen a la ventana y se liberan al reemplazarlos o destruirla. El histórico se consulta manualmente en el hilo de interfaz y al terminar una sesión; puede demorar si SQL Server remoto responde lentamente.
+`dashboard/mvp.py` es la única interfaz; `dashboard/app.py` conserva un alias de importación. El trabajador QThread carga, analiza, consulta el histórico, exporta y guarda; entrega resultados por señales. Solo el hilo principal actualiza widgets. Cerrar solicita esperar a la operación activa. El monitor experimental usa otro QThread secuencial y un Event para detener la espera. Análisis manual, exportación/consulta y monitor se excluyen en la misma ventana. Los trabajadores pertenecen a la ventana y se liberan al reemplazarlos o destruirla. No se altera la configuración mientras el monitor está activo.
 
 SQLAlchemy representa el mismo esquema para SQL Server principal y SQLite demo. El script `sql/02_tablas.sql` proviene de la referencia y usa el dialecto mssql. Cada ejecución tiene UUID, fecha UTC, SHA-256 de los bytes analizados, reglas, opciones, métricas, resúmenes y muestras. Los metadatos de monitoreo se guardan dentro del payload existente. No se ejecuta SQL construido a partir del CSV.
 
@@ -15,6 +15,7 @@ SQLAlchemy representa el mismo esquema para SQL Server principal y SQLite demo. 
 | Lenguaje | Python 3.11/3.12; integración validada con 3.11 en Windows |
 | Escritorio | PySide6 |
 | Datos | Pandas / NumPy (dependencia de Pandas) |
+| Componente inteligente | scikit-learn / IsolationForest, ajustado por snapshot |
 | BD principal | SQL Server |
 | Acceso BD | SQLAlchemy 2.x + pyodbc |
 | Configuración | python-dotenv y JSON |
@@ -22,7 +23,9 @@ SQLAlchemy representa el mismo esquema para SQL Server principal y SQLite demo. 
 | Demo local | SQLite, solo con --demo |
 | Gráficos | Barras Qt nativas |
 
-No se añadieron Matplotlib, Pydantic, scikit-learn o PyInstaller porque el flujo implementado no los necesita. Las validaciones son explícitas, las anomalías usan IQR y la entrega es fuente. No es una interfaz web ni depende de Streamlit.
+Las validaciones son explícitas; IQR se conserva y `anomalies/isolation_forest.py` añade aprendizaje no supervisado sobre varias columnas numéricas. El motor integra sus hallazgos sin alterar las dimensiones ni el score. El objeto `inteligencia` del reporte registra columnas, omisiones, parámetros, versión de scikit-learn, escalas y umbral, además de hasta 2 000 registros atípicos ordenados por puntuación. Se guarda en el payload existente y se exporta a JSON/CSV; no necesita migración de tablas. Los históricos anteriores se muestran como «modelo no incluido». No se persisten los árboles ni se reutilizan entre lotes. Véase [COMPONENTE_INTELIGENTE.md](COMPONENTE_INTELIGENTE.md).
+
+No se requieren Matplotlib, Pydantic ni PyInstaller. La entrega es código fuente de escritorio; no depende de Streamlit.
 
 ## Datos y seguridad del prototipo
 

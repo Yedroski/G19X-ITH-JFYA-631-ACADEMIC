@@ -1,0 +1,33 @@
+{
+  "dataset": "demo_inteligente.csv",
+  "sha256": "a3b1d09a6b43aea189ffc2bad47513c1760ec1345ae1d70468dfb465e3595548",
+  "filas": 402,
+  "sembrados": [
+    401,
+    402
+  ],
+  "sembrados_detectados": [
+    401,
+    402
+  ],
+  "otros_senalados": 19,
+  "total_senalados": 21,
+  "hallazgos_iqr": 0,
+  "score": 100.0,
+  "cobertura": 50,
+  "segundos_motor_incluye_importacion": 2.5492,
+  "columnas": [
+    "unidades",
+    "importe"
+  ],
+  "parametros": {
+    "n_estimators": 200,
+    "max_samples": 256,
+    "contamination": 0.05,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "version_sklearn": "1.8.0",
+  "fuente_sin_cambios": true,
+  "limite": "Caso sintético conocido. Otros señalados son falsos positivos respecto de las etiquetas sembradas; no demuestra exactitud productiva."
+}

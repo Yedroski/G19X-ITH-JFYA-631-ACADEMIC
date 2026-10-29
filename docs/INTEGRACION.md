@@ -13,3 +13,11 @@ Se sustituyeron archivos vacíos con nombres `init.py`, `-init-.py` y `--init--.
 Cambios locales preexistentes en `.vs`: `.suo`, `DocumentLayout.json` y `SemanticSymbols.db`. No se incluyeron en los commits de integración ni se modificaron deliberadamente. Siguen apareciendo en `git status` porque ya estaban versionados antes de esta integración, aunque `.vs/` figura en `.gitignore`.
 
 El PRD recibido se conserva íntegro en `docs/PRD_ORIGINAL.txt`. Las decisiones de alcance y el módulo experimental se documentan en el PRD actualizado, sin presentar monitoreo por sondeo como una plataforma de streaming distribuido.
+
+## Unificación del 29 de octubre de 2026
+
+Se guardó primero el avance local de dashboard/formulario/ejemplo del MVP en `51fa99e` y se subió a `origin/main`. Ese punto inicial tenía una prueba fallida por buscar «correo» cuando la columna era `email`; se corrigió en la unificación. Los archivos personales `.vs` no forman parte de estos cambios.
+
+La única ventana vigente es `dashboard/mvp.py`; `dashboard/app.py` reexporta esa ventana para importaciones anteriores. `iniciar_mvp.bat` es el acceso principal e `iniciar_demo.bat` lo invoca. Ambos conservan SQLite explícita, mientras que SQL Server usa la misma interfaz con su configuración propia. El monitoreo se trasladó a esta ventana junto con IQR.
+
+Se añadió `anomalies/isolation_forest.py` con aprendizaje multivariado, configuración, trazabilidad y prueba sintética; no procede de la referencia. Se integró en motor, servicio, CLI, monitor, GUI, histórico y exportación. El README distingue historial original, referencia externa y asistencia de Codex, incluida la del 15 de octubre y esta entrega. El autor/proveedor del ZIP no consta en el material local y requiere confirmación del alumno; no se atribuye sin evidencia.

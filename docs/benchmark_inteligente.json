@@ -1,0 +1,122 @@
+{
+  "fecha_utc": "2026-10-29T16:44:45.987512+00:00",
+  "python": "3.11.0",
+  "sistema": "Windows",
+  "maquina": "AMD64",
+  "alcance": "Carga, reglas, IQR y guardado SQLite; excluye generacion, inicio Python y exportacion.",
+  "isolation_forest": true,
+  "casos": [
+    {
+      "filas": 10000,
+      "columnas": 7,
+      "segundos_totales": [
+        3.4671,
+        1.5502,
+        1.5615
+      ],
+      "mediana_segundos": 1.5615,
+      "segundos_motor": [
+        3.2817,
+        1.4028,
+        1.4037
+      ],
+      "score": 97.4145,
+      "cobertura": 100,
+      "muestra": 2000,
+      "modelo": {
+        "activo": true,
+        "metodo": "IsolationForest",
+        "estado": "evaluado",
+        "motivo": "Atípicos relativos al lote; requieren revisión humana.",
+        "columnas": [
+          "edad",
+          "total",
+          "descuento"
+        ],
+        "columnas_excluidas": {
+          "id": "Identificador o clave; no se usa como magnitud.",
+          "email": "Contiene texto no numérico o no tiene datos.",
+          "estado": "Contiene texto no numérico o no tiene datos.",
+          "fecha": "Contiene texto no numérico o no tiene datos."
+        },
+        "seleccion": "automatica",
+        "filas_evaluadas": 10000,
+        "filas_omitidas": 0,
+        "minimo_filas": 20,
+        "parametros": {
+          "n_estimators": 200,
+          "max_samples": 256,
+          "contamination": 0.05,
+          "random_state": 42,
+          "n_jobs": 1
+        },
+        "version_sklearn": "1.8.0",
+        "umbral_score_samples": -0.6651751482274216,
+        "anomalias": 500,
+        "detalle_limitado": false,
+        "preprocesamiento": "Filas completas finitas; escala por máximo absoluto de cada columna; sin imputación.",
+        "escalas": {
+          "edad": 150.0,
+          "total": 100000.0,
+          "descuento": 9999.0
+        }
+      }
+    },
+    {
+      "filas": 100000,
+      "columnas": 7,
+      "segundos_totales": [
+        9.4942,
+        9.2926,
+        9.0083
+      ],
+      "mediana_segundos": 9.2926,
+      "segundos_motor": [
+        8.3765,
+        8.2003,
+        7.9896
+      ],
+      "score": 97.4165,
+      "cobertura": 100,
+      "muestra": 2000,
+      "modelo": {
+        "activo": true,
+        "metodo": "IsolationForest",
+        "estado": "evaluado",
+        "motivo": "Atípicos relativos al lote; requieren revisión humana.",
+        "columnas": [
+          "edad",
+          "total",
+          "descuento"
+        ],
+        "columnas_excluidas": {
+          "id": "Identificador o clave; no se usa como magnitud.",
+          "email": "Contiene texto no numérico o no tiene datos.",
+          "estado": "Contiene texto no numérico o no tiene datos.",
+          "fecha": "Contiene texto no numérico o no tiene datos."
+        },
+        "seleccion": "automatica",
+        "filas_evaluadas": 100000,
+        "filas_omitidas": 0,
+        "minimo_filas": 20,
+        "parametros": {
+          "n_estimators": 200,
+          "max_samples": 256,
+          "contamination": 0.05,
+          "random_state": 42,
+          "n_jobs": 1
+        },
+        "version_sklearn": "1.8.0",
+        "umbral_score_samples": -0.6702686010623069,
+        "anomalias": 4998,
+        "detalle_limitado": true,
+        "preprocesamiento": "Filas completas finitas; escala por máximo absoluto de cada columna; sin imputación.",
+        "escalas": {
+          "edad": 150.0,
+          "total": 100000.0,
+          "descuento": 9999.0
+        }
+      }
+    }
+  ]
+}

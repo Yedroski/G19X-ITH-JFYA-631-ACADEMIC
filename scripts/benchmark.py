@@ -20,6 +20,7 @@ from src.service import ejecutar
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repeticiones', type=int, default=3)
+    parser.add_argument('--intelligent', action='store_true', help='Incluir Isolation Forest en cada ejecución')
     parser.add_argument('--salida', type=Path, default=ROOT / 'reports/benchmark.json')
     args = parser.parse_args()
     if args.repeticiones < 1:
@@ -31,7 +32,8 @@ def main():
     repo.init()
     result = {'fecha_utc': datetime.now(timezone.utc).isoformat(), 'python': platform.python_version(),
               'sistema': platform.system(), 'maquina': platform.machine(),
-              'alcance': 'Carga, analisis IQR y guardado SQLite; excluye generacion, inicio Python y exportacion.',
+              'alcance': 'Carga, reglas, IQR y guardado SQLite; excluye generacion, inicio Python y exportacion.',
+              'isolation_forest': args.intelligent,
               'casos': []}
     try:
         for n in (10_000, 100_000):
@@ -41,7 +43,7 @@ def main():
             motor = []
             for _ in range(args.repeticiones):
                 start = time.perf_counter()
-                report = ejecutar(path, rules, repo, anomalies=True)
+                report = ejecutar(path, rules, repo, anomalies=True, intelligent=args.intelligent)
                 durations.append(round(time.perf_counter() - start, 4))
                 motor.append(report['segundos'])
                 if not report['guardado']:
@@ -49,7 +51,9 @@ def main():
             result['casos'].append({'filas': n, 'columnas': report['columnas'],
                                    'segundos_totales': durations, 'mediana_segundos': statistics.median(durations),
                                    'segundos_motor': motor, 'score': report['score'],
-                                   'cobertura': report['cobertura'], 'muestra': len(report['incidencias'])})
+                                   'cobertura': report['cobertura'], 'muestra': len(report['incidencias']),
+                                   'modelo': report['inteligencia'] if not args.intelligent else
+                                   {k: v for k, v in report['inteligencia'].items() if k != 'resultados'}})
     finally:
         repo.engine.dispose()
     args.salida.parent.mkdir(parents=True, exist_ok=True)

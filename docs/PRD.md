@@ -1,6 +1,6 @@
 # PRD — Sistema Inteligente de Calidad de Datos
 
-Revisión de integración: 15 de octubre de 2026. Fuente: `PRD.txt` recibido en la carpeta de trabajo, conservado íntegramente en `docs/PRD_ORIGINAL.txt`. Este documento es la versión vigente y versionada; el archivo `PRD.txt` junto a las dos carpetas de proyectos contiene una copia de esta revisión.
+Revisión del MVP unificado: 29 de octubre de 2026. Fuente original: `PRD.txt`, conservado íntegramente en `docs/PRD_ORIGINAL.txt`. Este documento es la versión vigente; el archivo externo `PRD.txt` no se sincroniza automáticamente. Alcance de entrega en [MVP.md](MVP.md).
 
 ## Propósito y usuarios
 
@@ -27,7 +27,7 @@ El flujo principal sigue siendo batch bajo demanda. Se añade una opción experi
 | RF-07 | Detectar duplicados de filas completas o claves seleccionadas. | Motor; excedentes para unicidad |
 | RF-08 | Mostrar mínimo, máximo, media, desviación, mediana y cuartiles numéricos. | Perfil; solo valores convertibles finitos |
 | RF-09 | Mostrar hasta cinco ejemplos y valores más frecuentes. | Perfilado |
-| RF-10 | Configurar reglas y guardarlas/cargarlas en JSON. | Editor, formato español y canónico |
+| RF-10 | Crear reglas con formulario visual y guardarlas/cargarlas en JSON. | `dashboard/rule_builder.py`, formato español y canónico |
 | RF-11 | Validar configuración y evaluar las reglas seleccionadas. | Motor común |
 | RF-12 | Identificar registros que incumplen cada regla. | Conteos completos y muestra acotada |
 | RF-13 | Detectar anomalías numéricas exploratorias mediante IQR opcional. | `anomalies` |
@@ -42,6 +42,10 @@ El flujo principal sigue siendo batch bajo demanda. Se añade una opción experi
 | RF-22 | Actualizar dashboard y alertar localmente ante score bajo el umbral. | Monitor; umbral configurable 0–100 |
 | RF-23 | Reintentar cambios inestables/errores de fuente y conservar el último resultado válido. | Monitor y pruebas de recuperación |
 | RF-24 | Registrar metadatos del monitoreo e histórico de versiones. | Payload persistido y últimas 100 versiones de sesión |
+| RF-25 | Aprender patrones multivariados con Isolation Forest y señalar registros atípicos. | `anomalies/isolation_forest.py`; GUI, CLI y monitor |
+| RF-26 | Seleccionar variables, configurar proporción esperada y consultar puntuaciones/limitaciones. | Reglas y Resultados → Detección inteligente |
+| RF-27 | Persistir/exportar columnas, parámetros, versión, omisiones y hallazgos inteligentes. | Payload JSON y `anomalias_inteligentes.csv` |
+| RF-28 | Demostrar datos de ejemplo y anomalías inteligentes desde la misma interfaz. | Dos botones de ejemplo; accesos BAT unificados |
 
 ## Métricas y decisiones de cálculo
 
@@ -85,7 +89,7 @@ La sección original repetía los RF; se sustituye por requisitos verificables:
 - R-04 revisada: batch estable más monitoreo experimental optativo por sondeo local; sin streaming distribuido ni garantía de capturar cada escritura.
 - R-05/R-06: hasta 100 000 filas y 100 MB por snapshot; un equipo, archivo completo en memoria y capacidad dependiente del hardware.
 - R-07/R-16: reglas limitadas configuradas por responsables; regex confiables, sin timeout individual.
-- R-09: anomalías IQR, sin entrenamiento ni modelos avanzados de IA. El nombre del proyecto no implica IA implementada.
+- R-09 revisada: componente inteligente implementado con `sklearn.ensemble.IsolationForest` en `src/anomalies/isolation_forest.py`. Aprende sin etiquetas de cada snapshot y evalúa ese mismo lote; requiere al menos dos columnas numéricas variables y 20 filas completas finitas. Usa 200 árboles, hasta 256 filas por árbol, semilla 42 y proporción estimada de atípicos configurable (5% por defecto). Registra parámetros, versión, columnas, filas omitidas y puntuaciones. IQR permanece como complemento univariado. No hay predicción supervisada, aprendizaje continuo, inferencia causal, garantía de exactitud, corrección automática ni modificación del Quality Score. Los atípicos requieren revisión humana; se documentan falsos positivos del caso sintético y no se extrapola su rendimiento a producción. Véase [COMPONENTE_INTELIGENTE.md](COMPONENTE_INTELIGENTE.md).
 - R-10: recomendaciones; sin corrección automática ni escritura sobre la fuente.
 - R-11/R-12/R-13: escritorio local para pocos usuarios, sin SSO/MFA, servicio web ni roles corporativos.
 - R-14: histórico básico implementado; lista de últimas 500 ejecuciones. Sin retención automática, migraciones ni sincronización offline. Reiniciar el monitor inicia una sesión nueva.
@@ -93,9 +97,9 @@ La sección original repetía los RF; se sustituye por requisitos verificables:
 
 ## Arquitectura y stack
 
-Presentación PySide6/CLI → servicios de análisis/monitoreo → ingesta, perfilado, reglas, IQR y recomendaciones → repositorio SQLAlchemy/pyodbc y SQL Server. SQLite solo en modo `--demo`. Pruebas con pytest y QtTest. Versionado Git conservando el historial original.
+Presentación única PySide6/CLI → servicios de análisis/monitoreo → ingesta, perfilado, reglas, IQR, Isolation Forest y recomendaciones → repositorio SQLAlchemy/pyodbc y SQL Server. SQLite solo en modo `--demo`. Pruebas con pytest y QtTest. Versionado Git conservando el historial original.
 
-Se usan Pandas/NumPy, configuración JSON/python-dotenv y barras Qt nativas. No se añaden Matplotlib, Pydantic, scikit-learn o PyInstaller mientras no aporten una necesidad concreta al prototipo. El entregable es código ejecutable desde Python con la solución Visual Studio existente.
+Se usan Pandas/NumPy, scikit-learn para el componente inteligente, configuración JSON/python-dotenv y barras Qt nativas. No se requieren Matplotlib, Pydantic ni PyInstaller. El entregable es código ejecutable desde Python con la solución Visual Studio existente.
 
 ## Aceptación
 
@@ -106,3 +110,6 @@ Se usan Pandas/NumPy, configuración JSON/python-dotenv y barras Qt nativas. No 
 5. Archivos incompletos, ausentes, bloqueados o con esquema cambiado muestran error recuperable y preservan el último reporte.
 6. Detener/reiniciar/cerrar el monitor termina limpiamente; GUI y CLI usan el mismo motor.
 7. Se registra evidencia local de pruebas y rendimiento; la integración real SQL Server requiere una instancia configurada y se distingue de la demo.
+8. `iniciar_mvp.bat` e `iniciar_demo.bat` abren la misma interfaz con dashboard, ejemplo, reglas visuales, IQR y monitoreo.
+9. En `demo_inteligente.csv`, Isolation Forest señala los registros 401 y 402; IQR produce cero hallazgos. Se muestran también los otros señalados y se declaran falsos positivos respecto de las dos anomalías sembradas.
+10. Activar/desactivar el modelo conserva las métricas y Quality Score; faltas de datos suficientes se muestran como «No evaluado». Histórico y exportaciones conservan la evidencia del modelo.

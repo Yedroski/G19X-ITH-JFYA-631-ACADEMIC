@@ -1,4 +1,38 @@
-# Validación de la integración
+# Validación del MVP unificado
+
+## Entrega del 29 de octubre de 2026
+
+Windows AMD64, Python 3.11.0, `.venv311`; scikit-learn 1.8.0. Suite final: **96 passed, 1 skipped en 40.50 s**, salida 0. `pip check`: **No broken requirements found**. Se conserva omitida la prueba optativa de SQL Server real: no hay validación contra una instancia configurada en esta sesión.
+
+```powershell
+.\.venv311\Scripts\python.exe -m pytest -q
+.\.venv311\Scripts\python.exe -m pip check
+.\.venv311\Scripts\python.exe scripts/validar_inteligencia.py
+.\.venv311\Scripts\python.exe scripts/benchmark.py --intelligent --repeticiones 3 --salida reports/benchmark_inteligente.json
+```
+
+- Interfaz única: entrada por defecto y alias `--mvp`, dashboard, ejemplo, formulario de reglas y compatibilidad de importación anterior.
+- Monitor integrado: bloquea edición/análisis/consulta concurrentes, conserva el último reporte ante un cambio de esquema, recupera, detiene, reinicia y cierra limpiamente sin cambiar de pestaña.
+- Isolation Forest: ambas combinaciones sembradas detectadas sin hallazgos IQR; score y datos intactos; mismo resultado al repetir con semilla/versión fijadas; datos insuficientes, nulos, infinitos, columnas y proporciones inválidas; conteos completos con detalle limitado.
+- Flujo completo del modelo: ejemplo de un clic, casilla para desactivar, tabla y parámetros visibles, persistencia SQLite y exportación JSON/CSV, consola y monitoreo; apertura de históricos anteriores sin campo `inteligencia`.
+- Regresión: ingesta, API y 16 reglas originales, oráculo manual, persistencia transaccional, fuente sin cambios, errores recuperables y cierre de trabajadores.
+
+Evidencia de detección: [validacion_inteligencia.json](validacion_inteligencia.json). Detectó las filas 401 y 402 y señaló otras 19 con la proporción por defecto del 5%; esas 19 son falsos positivos respecto de las etiquetas sembradas. La interpretación y limitaciones constan en [COMPONENTE_INTELIGENTE.md](COMPONENTE_INTELIGENTE.md).
+
+Revisión visual mediante Qt offscreen con el bucle real `QApplication.exec()`: dashboard, formulario de reglas y detección inteligente. Capturas locales en `reports/validacion_unificada/{dashboard,inteligencia,reglas}.png`, ignoradas por Git. El flujo de ejemplo inteligente completó lectura, entrenamiento y render en 3.52 s en esa ejecución. Esto no acredita interacción con los diálogos nativos ni SQL Server.
+
+### Rendimiento con el componente inteligente
+
+Carga + siete reglas + IQR + Isolation Forest + guardado SQLite, sin generación ni exportación. La primera ejecución incluye la importación inicial de scikit-learn. Evidencia completa: [benchmark_inteligente.json](benchmark_inteligente.json).
+
+| Filas | Tres ejecuciones (s) | Mediana (s) |
+|---|---|---|
+| 10 000 | 3.4671, 1.5502, 1.5615 | 1.5615 |
+| 100 000 | 9.4942, 9.2926, 9.0083 | 9.2926 |
+
+Cumple el objetivo orientativo local de 10 000 filas en menos de 30 s con el modelo activado. No constituye SLA ni predice tiempos de una instancia remota o archivos más anchos.
+
+## Evidencia histórica de la integración del 15 de octubre
 
 Fecha: 15 de octubre de 2026. Equipo local Windows AMD64, Python 3.11.0, entorno aislado `.venv311`. Versiones directas en `requirements-tested.txt`.
 
