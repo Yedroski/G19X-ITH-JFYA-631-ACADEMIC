@@ -37,7 +37,7 @@ class MonitorPanel(QWidget):
         super().__init__()
         layout = QVBoxLayout(self)
         description = QLabel('EXPERIMENTAL · Monitoreo de cambios en CSV\n'
-                             'Selecciona el archivo y configura sus reglas arriba. Se analiza cada versión estable '
+                             'Selecciona el archivo en Datos y configura sus Reglas. Se analiza cada versión estable '
                              'del archivo completo. El dashboard se actualiza automáticamente. Detén el monitor para cambiar la configuración.')
         description.setWordWrap(True)
         layout.addWidget(description)

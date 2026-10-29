@@ -5,9 +5,9 @@ if not exist ".venv311\Scripts\python.exe" (
     pause
     exit /b 1
 )
-.venv311\Scripts\python.exe main.py --demo --mvp
+.venv311\Scripts\python.exe main.py --demo
 if errorlevel 1 (
-    echo No se pudo iniciar el MVP. Revisa el mensaje anterior o ejecuta instalar.bat.
+    echo No se pudo iniciar la aplicacion. Revisa el mensaje anterior o ejecuta instalar.bat.
     pause
     exit /b 1
 )

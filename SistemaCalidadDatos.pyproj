@@ -53,6 +53,7 @@
     <Content Include="docs\*.md" />
     <Content Include="sql\*.sql" />
     <Content Include="data\input\demo_clientes.csv" />
+    <Content Include="data\input\demo_inteligente.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

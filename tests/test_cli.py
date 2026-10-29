@@ -43,3 +43,25 @@ def test_cli_rechaza_combinaciones_invalidas(args):
 def test_cli_no_confunde_sin_analisis_con_exito(tmp_path, monkeypatch):
     monkeypatch.setattr(main, 'ROOT', tmp_path)
     assert main.main(['--demo', '--csv', str(tmp_path / 'ausente.csv'), '--watch', '--max-polls', '1']) == 1
+
+
+def test_cli_inteligente_y_monitor(tmp_path, monkeypatch):
+    from scripts.generar_demo_inteligente import dataset
+    monkeypatch.setattr(main, 'ROOT', tmp_path)
+    path = tmp_path / 'ia.csv'
+    dataset().to_csv(path, index=False)
+    args = ['--demo', '--csv', str(path), '--intelligent', '--anomaly-columns', 'unidades,importe',
+            '--contamination', '.05', '--output', str(tmp_path / 'out')]
+    assert main.main(args) == 0
+    assert main.main(args + ['--watch', '--interval', '.1', '--stability', '.1', '--max-polls', '3']) == 0
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in (tmp_path / 'out').glob('*/reporte.json')]
+    assert len(reports) == 2
+    assert reports[0]['inteligencia'] == reports[1]['inteligencia']
+
+
+@pytest.mark.parametrize('args', [['--contamination', 'nan'], ['--contamination', '0'],
+                                  ['--contamination', '.51'], ['--anomaly-columns', 'x,y']])
+def test_cli_rechaza_opciones_inteligentes_invalidas(args):
+    with pytest.raises(SystemExit) as error:
+        main.main(args)
+    assert error.value.code == 2

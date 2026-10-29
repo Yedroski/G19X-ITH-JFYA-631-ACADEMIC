@@ -54,7 +54,7 @@ def test_demo_un_clic_exporta_y_recupera_historial(mvp, qt_app, tmp_path):
     assert len(mvp.builder.rules) == 7
     assert mvp.tabs.currentIndex() == 2
     assert mvp.actions.rowCount() > 0
-    mvp.issue_filter.setText('correo')
+    mvp.issue_filter.setText('email')
     assert 0 < mvp.issues.rowCount() < len(report['incidencias'])
     mvp.export_to(tmp_path / 'export')
     wait_for(qt_app, lambda: not mvp.busy and mvp.last_export is not None)
@@ -68,6 +68,32 @@ def test_demo_un_clic_exporta_y_recupera_historial(mvp, qt_app, tmp_path):
     wait_for(qt_app, lambda: not mvp.busy and mvp.report is not None)
     assert mvp.report == report
     assert hashlib.sha256(source.read_bytes()).hexdigest() == before
+
+
+def test_demo_inteligente_muestra_modelo_y_las_dos_combinaciones(mvp, qt_app):
+    mvp.intelligent_demo_button.click()
+    wait_for(qt_app, lambda: not mvp.busy and mvp.report is not None, timeout=20)
+    report = mvp.report
+    assert report['inteligencia']['estado'] == 'evaluado'
+    assert mvp.selected_anomaly_columns() == ['unidades', 'importe']
+    assert {401, 402} <= {r['registro'] for r in report['inteligencia']['resultados']}
+    assert report['conteos'].get('anomalia', 0) == 0
+    assert 'Isolation Forest' in mvp.intelligence_info.text()
+    assert mvp.intelligence_table.rowCount() == report['inteligencia']['anomalias']
+    mvp.intelligent.setChecked(False)
+    assert mvp.report is None
+    mvp.start_analysis()
+    wait_for(qt_app, lambda: not mvp.busy and mvp.report is not None)
+    assert not mvp.report['inteligencia']['activo']
+    assert mvp.report['score'] == report['score']
+
+
+def test_historico_anterior_sin_inteligencia_sigue_visible(mvp):
+    report = analizar(pd.DataFrame({'id': ['1', '2']}))
+    report.pop('inteligencia')
+    mvp.show_report(report)
+    assert 'no incluida' in mvp.intelligence_info.text()
+    assert mvp.cards['score'].text() == '100.00'
 
 
 def test_csv_propio_reglas_visuales_y_metricas(mvp, qt_app, tmp_path):
@@ -201,7 +227,8 @@ def test_servicio_rechaza_snapshot_cambiado_antes_de_guardar(tmp_path):
         ejecutar(path, [], NeverSave(), expected_sha256='distinto')
 
 
-def test_entrada_mvp_usa_vista_guiada(tmp_path, monkeypatch):
+@pytest.mark.parametrize('args', [['--demo'], ['--demo', '--mvp']])
+def test_entrada_mvp_usa_vista_guiada(tmp_path, monkeypatch, args):
     import src.dashboard.mvp as module
     monkeypatch.setattr(main, 'ROOT', tmp_path)
     received = []
@@ -209,7 +236,7 @@ def test_entrada_mvp_usa_vista_guiada(tmp_path, monkeypatch):
         received.append((repo is not None, demo, error))
         return 0
     monkeypatch.setattr(module, 'launch', launch)
-    assert main.main(['--demo', '--mvp']) == 0
+    assert main.main(args) == 0
     assert received == [(True, True, '')]
 
 

@@ -5,29 +5,34 @@ from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal, Qt
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFileDialog, QFrame, QHBoxLayout,
-    QLabel, QLineEdit, QMainWindow, QProgressBar, QPushButton, QTabWidget,
+    QApplication, QCheckBox, QComboBox, QDoubleSpinBox, QFileDialog, QFrame, QHBoxLayout,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QProgressBar, QPushButton, QTabWidget,
     QVBoxLayout, QWidget,
 )
 
-from src.dashboard.app import fill, table
+from src.dashboard.widgets import fill, table
+from src.anomalies.isolation_forest import columnas_candidatas
+from src.dashboard.monitor import MonitorPanel, MonitorWorker
 from src.dashboard.rule_builder import RULE_NAMES, RuleBuilder
 from src.exporter import exportar
 from src.ingestion.data_loader import cargar_snapshot
+from src.monitoring.monitor import MonitorCSV
 from src.remediation.recommender import SUGGESTIONS
 from src.service import ejecutar
 
 ROOT = Path(__file__).resolve().parents[2]
 ISSUE_NAMES = {**RULE_NAMES, 'faltante': 'Dato faltante', 'duplicado': 'Registro duplicado',
-               'anomalia': 'Posible anomalía'}
+               'anomalia': 'Anomalía IQR', 'anomalia_multivariada': 'Anomalía multivariada (IA)'}
 
 
 def preview(path, sep=None, encoding='utf-8-sig'):
     df, digest, _ = cargar_snapshot(path, sep, encoding)
     sample = df.head(20).astype(object)
+    candidates, excluded = columnas_candidatas(df)
     return {'path': str(Path(path).resolve()), 'columns': list(df.columns), 'count': len(df),
             'rows': sample.where(sample.notna(), None).to_dict('records'),
-            'sha256': digest, 'sep': sep, 'encoding': encoding}
+            'sha256': digest, 'sep': sep, 'encoding': encoding,
+            'anomaly_candidates': candidates, 'anomaly_excluded': excluded}
 
 
 class MvpTask(QThread):
@@ -65,13 +70,15 @@ class MvpWindow(QMainWindow):
         self.loaded = None
         self.report = None
         self.worker = None
+        self.monitor_worker = None
+        self.monitoring = False
         self.busy = False
         self.closing = False
         self.last_export = None
         self._callback = None
         self._pending_rules = []
         self._auto_analyze = False
-        self.setWindowTitle('SistemaCalidadDatos · MVP')
+        self.setWindowTitle('Sistema Inteligente de Calidad de Datos')
         self.resize(1240, 850)
         root = QWidget()
         self.setCentralWidget(root)
@@ -85,6 +92,9 @@ class MvpWindow(QMainWindow):
         self.demo_button = QPushButton('Probar con datos de ejemplo')
         self.demo_button.clicked.connect(self.try_demo)
         header.addWidget(self.demo_button)
+        self.intelligent_demo_button = QPushButton('Probar detección inteligente')
+        self.intelligent_demo_button.clicked.connect(self.try_intelligent_demo)
+        header.addWidget(self.intelligent_demo_button)
         layout.addLayout(header)
         persistence = ('Histórico local de demostración' if demo else 'Histórico conectado a SQL Server') if repo else 'Histórico no disponible. Puedes analizar y exportar resultados. ' + db_error
         layout.addWidget(text_label(persistence, 'muted'))
@@ -102,11 +112,18 @@ class MvpWindow(QMainWindow):
         self._build_rules()
         self._build_results()
         self._build_history()
+        self.monitor_panel = MonitorPanel()
+        self.monitor_panel.start_requested.connect(self.start_monitor)
+        self.monitor_panel.stop_requested.connect(self.stop_monitor)
+        self.tabs.addTab(self.monitor_panel, 'Tiempo real · Experimental')
         self.builder.changed.connect(self.configuration_changed)
         self.sep.currentIndexChanged.connect(self.input_options_changed)
         self.encoding.currentIndexChanged.connect(self.input_options_changed)
         self.keys.currentIndexChanged.connect(self.configuration_changed)
         self.anomalies.toggled.connect(self.configuration_changed)
+        self.intelligent.toggled.connect(self.intelligence_changed)
+        self.anomaly_columns.itemChanged.connect(self.configuration_changed)
+        self.contamination.valueChanged.connect(self.configuration_changed)
         self.tabs.currentChanged.connect(self.tab_changed)
         self.setStyleSheet('''
             QMainWindow, QWidget { background:#f2f5f8; color:#20334a; font-family:"Segoe UI"; font-size:13px; }
@@ -183,9 +200,28 @@ class MvpWindow(QMainWindow):
         self.keys.addItem('Fila completa', None)
         options.addWidget(text_label('Detectar duplicados por'))
         options.addWidget(self.keys, 1)
-        self.anomalies = QCheckBox('Buscar anomalías numéricas (IQR)')
+        self.anomalies = QCheckBox('Anomalías IQR')
         options.addWidget(self.anomalies)
         layout.addLayout(options)
+        self.intelligent = QCheckBox('Detección inteligente · Isolation Forest')
+        self.intelligent.setChecked(True)
+        layout.addWidget(self.intelligent)
+        self.intelligence_options = QWidget()
+        ml_layout = QHBoxLayout(self.intelligence_options)
+        ml_layout.setContentsMargins(0, 0, 0, 0)
+        ml_layout.addWidget(text_label('Columnas numéricas\n(mínimo dos)'))
+        self.anomaly_columns = QListWidget()
+        self.anomaly_columns.setMaximumHeight(85)
+        ml_layout.addWidget(self.anomaly_columns, 1)
+        ml_layout.addWidget(text_label('Proporción estimada\nde atípicos'))
+        self.contamination = QDoubleSpinBox()
+        self.contamination.setRange(.1, 50)
+        self.contamination.setValue(5)
+        self.contamination.setSuffix(' %')
+        self.contamination.setToolTip('Determina el umbral del modelo; puede marcar valores legítimos. No es una probabilidad de error.')
+        ml_layout.addWidget(self.contamination)
+        layout.addWidget(self.intelligence_options)
+        layout.addWidget(text_label('Aprende combinaciones de valores del archivo. Requiere 20 filas completas; los hallazgos no cambian el Quality Score.'))
         self.analyze_button = QPushButton('Analizar y ver resultados')
         self.analyze_button.setObjectName('primary')
         self.analyze_button.clicked.connect(self.start_analysis)
@@ -249,6 +285,14 @@ class MvpWindow(QMainWindow):
         self.issues = table([])
         issue_layout.addWidget(self.issues)
         results.addTab(issue_page, 'Incidencias')
+        intelligence_page = QWidget()
+        intelligence_layout = QVBoxLayout(intelligence_page)
+        self.intelligence_info = text_label('Ejecuta la detección inteligente para ver el modelo y sus hallazgos.')
+        intelligence_layout.addWidget(self.intelligence_info)
+        self.intelligence_table = table([])
+        intelligence_layout.addWidget(self.intelligence_table, 1)
+        results.addTab(intelligence_page, 'Detección inteligente')
+        self.result_tabs = results
         self.export_button = QPushButton('Exportar reporte y tablas')
         self.export_button.clicked.connect(self.choose_export)
         layout.addWidget(self.export_button, alignment=Qt.AlignmentFlag.AlignRight)
@@ -271,16 +315,21 @@ class MvpWindow(QMainWindow):
         self.message.setStyleSheet('color:#a52727;' if error else 'color:#20334a;')
 
     def update_controls(self):
-        self.data_controls.setEnabled(not self.busy)
-        self.demo_button.setEnabled(not self.busy)
-        self.reload_button.setEnabled(bool(self.path.text()) and not self.busy)
-        self.rules_page.setEnabled(self.loaded is not None and not self.busy)
-        self.next_button.setEnabled(self.loaded is not None and not self.busy)
-        self.export_button.setEnabled(self.report is not None and not self.busy)
-        self.refresh_button.setEnabled(self.repo is not None and not self.busy)
+        available = not (self.busy or self.monitoring or self.closing)
+        self.data_controls.setEnabled(available)
+        self.demo_button.setEnabled(available)
+        self.intelligent_demo_button.setEnabled(available)
+        self.reload_button.setEnabled(bool(self.path.text()) and available)
+        self.rules_page.setEnabled(self.loaded is not None and available)
+        self.next_button.setEnabled(self.loaded is not None and available)
+        self.export_button.setEnabled(self.report is not None and available)
+        self.refresh_button.setEnabled(self.repo is not None and available)
+        self.monitor_panel.start_button.setEnabled(self.loaded is not None and available)
+        for control in (self.monitor_panel.interval, self.monitor_panel.stability, self.monitor_panel.threshold):
+            control.setEnabled(available)
 
     def run_task(self, function, kwargs, callback, message):
-        if self.busy:
+        if self.busy or self.monitoring or self.closing:
             return False
         if self.worker:
             self.worker.deleteLater()
@@ -325,11 +374,12 @@ class MvpWindow(QMainWindow):
         for bar in self.dimensions.values():
             bar.setValue(0)
             bar.setFormat('Sin evaluar')
-        for widget in [self.profile, self.rule_results, self.actions, self.issues]:
+        for widget in [self.profile, self.rule_results, self.actions, self.issues, self.intelligence_table]:
             fill(widget, [])
         self.result_info.setText('Ejecuta un análisis para consultar sus resultados.')
         self.coverage.setText('Las dimensiones evaluadas y su cobertura aparecerán después del análisis.')
         self.issue_info.clear()
+        self.intelligence_info.setText('Ejecuta la detección inteligente para ver el modelo y sus hallazgos.')
         self.export_button.setEnabled(False)
 
     def configuration_changed(self):
@@ -337,6 +387,14 @@ class MvpWindow(QMainWindow):
         self.clear_report()
         if had_report:
             self.notify('La configuración cambió. Ejecuta un nuevo análisis para actualizar los resultados.')
+
+    def intelligence_changed(self):
+        self.intelligence_options.setEnabled(self.intelligent.isChecked())
+        self.configuration_changed()
+
+    def selected_anomaly_columns(self):
+        return [self.anomaly_columns.item(i).text() for i in range(self.anomaly_columns.count())
+                if self.anomaly_columns.item(i).checkState() == Qt.CheckState.Checked]
 
     def input_options_changed(self):
         self.loaded = None
@@ -355,7 +413,7 @@ class MvpWindow(QMainWindow):
             self.load_source(self.path.text(), preset_rules=deepcopy(self.builder.rules))
 
     def load_source(self, path, preset_rules=None, auto_analyze=False):
-        if self.busy:
+        if self.busy or self.monitoring or self.closing:
             return
         self.loaded = None
         self.clear_report()
@@ -375,6 +433,14 @@ class MvpWindow(QMainWindow):
         fill(self.preview_table, data['rows'])
         self.preview_info.setText(f"{data['count']:,} registros · {len(data['columns'])} columnas · primeras {len(data['rows'])} filas. El análisis utiliza todos los registros.")
         self.builder.set_columns(data['columns'])
+        self.anomaly_columns.blockSignals(True)
+        self.anomaly_columns.clear()
+        for column in data['anomaly_candidates']:
+            item = QListWidgetItem(column)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked)
+            self.anomaly_columns.addItem(item)
+        self.anomaly_columns.blockSignals(False)
         self.keys.blockSignals(True)
         self.keys.clear()
         self.keys.addItem('Fila completa', None)
@@ -385,7 +451,7 @@ class MvpWindow(QMainWindow):
         self.notify('Archivo listo. Continúa a las reglas o ejecuta el ejemplo preparado.')
 
     def try_demo(self):
-        if self.busy:
+        if self.busy or self.monitoring or self.closing:
             return
         try:
             rules = json.loads((self.project_root / 'config/reglas_demo.json').read_text(encoding='utf-8-sig'))
@@ -398,6 +464,18 @@ class MvpWindow(QMainWindow):
             control.blockSignals(False)
         self.anomalies.setChecked(False)
         self.load_source(self.project_root / 'data/input/demo_clientes.csv', rules, auto_analyze=True)
+
+    def try_intelligent_demo(self):
+        if self.busy or self.monitoring or self.closing:
+            return
+        for control in [self.sep, self.encoding]:
+            control.blockSignals(True)
+            control.setCurrentIndex(0)
+            control.blockSignals(False)
+        self.intelligent.setChecked(True)
+        self.anomalies.setChecked(True)
+        self.contamination.setValue(5)
+        self.load_source(self.project_root / 'data/input/demo_inteligente.csv', auto_analyze=True)
 
     def import_rules(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Cargar reglas', str(self.project_root / 'config'), 'JSON (*.json)')
@@ -418,17 +496,19 @@ class MvpWindow(QMainWindow):
                 self.notify(f'No se pudo guardar: {exc}', error=True)
 
     def start_analysis(self):
-        if self.busy or self.loaded is None:
+        if self.busy or self.monitoring or self.closing or self.loaded is None:
             return
         data = self.loaded
         key = self.keys.currentData()
         self.clear_report()
         self.run_task(ejecutar, {'path': data['path'], 'rules': deepcopy(self.builder.rules), 'repo': self.repo,
                                 'keys': [key] if key is not None else [], 'anomalies': self.anomalies.isChecked(),
+                                'intelligent': self.intelligent.isChecked(),
+                                'anomaly_columns': self.selected_anomaly_columns(), 'contamination': self.contamination.value() / 100,
                                 'sep': data['sep'], 'encoding': data['encoding'], 'expected_sha256': data['sha256']},
                       self.show_report, 'Analizando calidad y guardando resultados…')
 
-    def show_report(self, report):
+    def show_report(self, report, navigate=True):
         self.report = report
         self.last_export = None
         for key, label in self.cards.items():
@@ -451,9 +531,34 @@ class MvpWindow(QMainWindow):
                                  'Evaluados': r['evaluados'], 'Fallos': r['fallos'], 'Omitidos': r['omitidos']}
                                 for r in report['resultados_reglas']])
         self.filter_issues()
-        self.tabs.setCurrentIndex(2)
+        self.show_intelligence(report.get('inteligencia', {}))
+        if navigate:
+            self.tabs.setCurrentIndex(2)
         self.notify(report.get('error_bd') or f'Análisis completo. {saved}', error=bool(report.get('error_bd')))
         self.update_controls()
+
+    def show_intelligence(self, info):
+        fill(self.intelligence_table, [])
+        if not info.get('activo'):
+            self.intelligence_info.setText('Detección inteligente desactivada o no incluida en este reporte histórico.')
+            return
+        if info['estado'] != 'evaluado':
+            self.intelligence_info.setText('No evaluado · ' + info['motivo'])
+            return
+        params = info['parametros']
+        limit = ' El detalle muestra solo una parte; el conteo es completo.' if info['detalle_limitado'] else ''
+        self.intelligence_info.setText(
+            f"Isolation Forest · {info['anomalias']} registros atípicos de {info['filas_evaluadas']} evaluados; "
+            f"{info['filas_omitidas']} omitidos. Columnas: {', '.join(info['columnas'])}.\n"
+            f"Proporción estimada: {params['contamination']:.1%} · árboles: {params['n_estimators']} · "
+            f"semilla: {params['random_state']} · scikit-learn {info['version_sklearn']}.\n"
+            'Mayor puntuación = más atípico; decisión menor que cero = señalado. No es probabilidad de error. '
+            'Se aprende de cada lote y se requiere revisión humana.' + limit)
+        fill(self.intelligence_table, [
+            {'Registro': row['registro'], 'Puntuación de anomalía': round(row['puntuacion_anomalia'], 6),
+             'Decisión': round(row['decision'], 6),
+             'Valores observados': ', '.join(f'{c}: {v:g}' for c, v in row['valores'].items())}
+            for row in info['resultados']])
 
     def filter_issues(self):
         if self.report is None:
@@ -481,7 +586,7 @@ class MvpWindow(QMainWindow):
         self.notify(f'Reporte JSON y tablas CSV guardados en {destination}')
 
     def tab_changed(self, index):
-        if index == 3 and not self.busy and self.repo is not None:
+        if index == 3 and not self.busy and not self.monitoring and self.repo is not None:
             self.refresh_history()
 
     def refresh_history(self):
@@ -501,12 +606,65 @@ class MvpWindow(QMainWindow):
             self.run_task(self.repo.load, {'run_id': item.text()}, self.show_report, 'Recuperando reporte…')
 
     def closeEvent(self, event):
-        if self.busy:
+        if self.monitoring:
+            self.closing = True
+            self.stop_monitor()
+            event.ignore()
+        elif self.busy:
             self.closing = True
             self.notify('Finalizando la operación en curso antes de cerrar…')
             event.ignore()
         else:
             event.accept()
+
+    def start_monitor(self):
+        if self.busy or self.monitoring or self.closing or self.loaded is None:
+            return
+        data = self.loaded
+        key = self.keys.currentData()
+        try:
+            monitor = MonitorCSV(data['path'], deepcopy(self.builder.rules), self.repo,
+                                 keys=[key] if key is not None else [], anomalies=self.anomalies.isChecked(),
+                                 intelligent=self.intelligent.isChecked(), anomaly_columns=self.selected_anomaly_columns(),
+                                 contamination=self.contamination.value() / 100,
+                                 sep=data['sep'], encoding=data['encoding'],
+                                 interval=self.monitor_panel.interval.value(),
+                                 stable_seconds=self.monitor_panel.stability.value(),
+                                 threshold=self.monitor_panel.threshold.value())
+        except (ValueError, TypeError, KeyError) as exc:
+            self.notify(str(exc), error=True)
+            return
+        self.monitoring = True
+        self.monitor_panel.clear_session()
+        self.monitor_panel.set_running(True)
+        self.update_controls()
+        if self.monitor_worker:
+            self.monitor_worker.deleteLater()
+        self.monitor_worker = MonitorWorker(monitor, self)
+        self.monitor_worker.update.connect(self.monitor_update)
+        self.monitor_worker.finished.connect(self.monitor_done)
+        self.monitor_worker.start()
+        self.notify('Monitoreo activo. Cada versión estable actualizará los resultados.')
+
+    def stop_monitor(self):
+        if self.monitoring:
+            self.monitor_worker.stop()
+            self.monitor_panel.stop_button.setEnabled(False)
+            self.monitor_panel.status.setText('Deteniendo; esperando que finalice el análisis en curso…')
+
+    def monitor_update(self, event):
+        self.monitor_panel.show_event(event)
+        if event.get('reporte') is not None:
+            self.show_report(event['reporte'], navigate=False)
+
+    def monitor_done(self):
+        self.monitoring = False
+        self.monitor_panel.set_running(False)
+        self.monitor_panel.status.setText('Detenido · ' + self.monitor_panel.status.text())
+        self.update_controls()
+        self.notify('Monitoreo detenido. Si el CSV cambió, vuelve a cargarlo antes de un análisis manual.')
+        if self.closing:
+            self.close()
 
 
 def launch(repo=None, demo=False, db_error=''):

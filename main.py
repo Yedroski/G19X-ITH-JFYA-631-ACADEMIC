@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parent
 def monitor_cli(args, rules, repo):
     monitor = MonitorCSV(args.csv, rules, repo, keys=args.keys,
                          anomalies=args.anomalies, sep=args.sep, encoding=args.encoding,
-                         interval=args.interval, stable_seconds=args.stability, threshold=args.threshold)
+                         interval=args.interval, stable_seconds=args.stability, threshold=args.threshold,
+                         intelligent=args.intelligent, anomaly_columns=args.anomaly_columns, contamination=args.contamination)
     stop = Event()
     exit_code = 0
     reports = 0
@@ -47,12 +48,15 @@ def main(argv=None):
     load_dotenv(ROOT / '.env')
     parser = argparse.ArgumentParser(description='SistemaCalidadDatos · Escritorio / CLI')
     parser.add_argument('--demo', action='store_true', help='Usar SQLite explícitamente para demo')
-    parser.add_argument('--mvp', action='store_true', help='Abrir la interfaz guiada del MVP')
+    parser.add_argument('--mvp', action='store_true', help='Alias compatible: la interfaz guiada ya es la predeterminada')
     parser.add_argument('--init-db', action='store_true', help='Crear tablas en la base configurada')
     parser.add_argument('--csv')
     parser.add_argument('--rules', default=None)
     parser.add_argument('--keys', default='')
     parser.add_argument('--anomalies', action='store_true')
+    parser.add_argument('--intelligent', action='store_true', help='Detectar anomalías multivariadas con Isolation Forest')
+    parser.add_argument('--anomaly-columns', help='Columnas numéricas separadas por coma; por defecto selección automática')
+    parser.add_argument('--contamination', type=float, default=.05, help='Fracción estimada de atípicos: mayor que 0 y hasta 0.5; defecto 0.05')
     parser.add_argument('--sep', default=None)
     parser.add_argument('--encoding', default='utf-8-sig')
     parser.add_argument('--output', default=str(ROOT / 'reports'))
@@ -69,6 +73,12 @@ def main(argv=None):
     if args.max_polls is not None and (not args.watch or args.max_polls < 1):
         parser.error('--max-polls requiere --watch y un entero positivo.')
     args.keys = [key.strip() for key in args.keys.split(',') if key.strip()]
+    if args.anomaly_columns is not None:
+        args.anomaly_columns = [column.strip() for column in args.anomaly_columns.split(',') if column.strip()]
+    if not 0 < args.contamination <= .5:
+        parser.error('--contamination debe ser mayor que 0 y hasta 0.5.')
+    if args.anomaly_columns is not None and not args.intelligent:
+        parser.error('--anomaly-columns requiere --intelligent.')
     repo = None
     error = ''
     try:
@@ -89,7 +99,9 @@ def main(argv=None):
                 rules = json.loads(Path(args.rules).read_text(encoding='utf-8-sig')) if args.rules else []
                 if args.watch:
                     return monitor_cli(args, rules, repo)
-                report = ejecutar(args.csv, rules, repo, args.keys, args.anomalies, args.sep, args.encoding)
+                report = ejecutar(args.csv, rules, repo, args.keys, args.anomalies, args.sep, args.encoding,
+                                  intelligent=args.intelligent, anomaly_columns=args.anomaly_columns,
+                                  contamination=args.contamination)
                 destination = exportar(report, args.output)
                 print(json.dumps({'score': report['score'], 'cobertura': report['cobertura'],
                                   'guardado': report['guardado'], 'reporte': str(destination)}, ensure_ascii=False))
@@ -100,10 +112,7 @@ def main(argv=None):
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 print(f'No se completó el análisis: {exc}')
                 return 1
-        if args.mvp:
-            from src.dashboard.mvp import launch
-        else:
-            from src.dashboard.app import launch
+        from src.dashboard.mvp import launch
         return launch(repo, args.demo, error)
     finally:
         if repo is not None:

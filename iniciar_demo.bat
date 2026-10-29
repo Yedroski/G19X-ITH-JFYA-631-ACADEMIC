@@ -1,4 +1,4 @@
 @echo off
-cd /d "%~dp0"
-.venv311\Scripts\python.exe main.py --demo
-pause
+rem Alias compatible: ambos accesos abren la misma aplicacion definitiva.
+call "%~dp0iniciar_mvp.bat"
+exit /b %errorlevel%

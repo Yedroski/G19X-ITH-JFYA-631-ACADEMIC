@@ -10,7 +10,7 @@ if errorlevel 1 goto error
 :install
 .venv311\Scripts\python.exe -m pip install -r requirements.txt
 if errorlevel 1 goto error
-echo Instalacion completada. Usa iniciar_demo.bat o configura SQL Server.
+echo Instalacion completada. Usa iniciar_mvp.bat o configura SQL Server.
 pause
 exit /b 0
 :error

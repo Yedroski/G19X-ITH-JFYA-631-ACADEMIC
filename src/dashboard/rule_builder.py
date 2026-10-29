@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QPushButton, QStackedWidget, QVBoxLayout, QWidget,
 )
 
-from src.dashboard.app import fill, table
+from src.dashboard.widgets import fill, table
 from src.quality.rules import validar_reglas
 
 RULE_NAMES = {
