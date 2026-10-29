@@ -15,7 +15,7 @@ from src.service import guardar_reporte
 class MonitorCSV:
     def __init__(self, path, rules=None, repo=None, keys=None, anomalies=False,
                  sep=None, encoding='utf-8-sig', interval=2.0, stable_seconds=1.0,
-                 threshold=90.0):
+                 threshold=90.0, intelligent=False, anomaly_columns=None, contamination=.05):
         for name, value, low, high in [('interval', interval, .1, 3600),
                                        ('stable_seconds', stable_seconds, .1, 3600),
                                        ('threshold', threshold, 0, 100)]:
@@ -28,6 +28,9 @@ class MonitorCSV:
         self.repo = repo
         self.keys = list(keys or [])
         self.anomalies = anomalies
+        self.intelligent = intelligent
+        self.anomaly_columns = list(anomaly_columns) if anomaly_columns is not None else None
+        self.contamination = contamination
         self.sep = sep
         self.encoding = encoding
         self.interval = interval
@@ -68,7 +71,9 @@ class MonitorCSV:
             if digest == self._last_digest:
                 self._last_signature = signature
                 return self.event('sin_cambios', 'El contenido no cambió; no se repite el análisis.')
-            report = analizar(df, self.rules, self.path.name, self.keys, self.anomalies)
+            report = analizar(df, self.rules, self.path.name, self.keys, self.anomalies,
+                              intelligent=self.intelligent, anomaly_columns=self.anomaly_columns,
+                              contamination=self.contamination)
             if firma_archivo(self.path) != signature:
                 raise ArchivoEnCambio('El archivo cambió durante el análisis; se reintentará.')
             report['sha256'] = digest

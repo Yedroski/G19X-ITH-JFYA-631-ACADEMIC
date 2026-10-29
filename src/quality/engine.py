@@ -7,12 +7,14 @@ import pandas as pd
 from src.profiling.profiler import perfilar
 from src.quality.rules import validar_reglas, evaluar
 from src.anomalies.detector import detectar_iqr
+from src.anomalies.isolation_forest import detectar_isolation_forest
 from src.remediation.recommender import SUGGESTIONS
 
 WEIGHTS = {'completitud': .30, 'validez': .30, 'unicidad': .20, 'consistencia': .20}
 
 
-def analizar(df, rules=None, source='memoria', keys=None, anomalies=False, sample_limit=2000):
+def analizar(df, rules=None, source='memoria', keys=None, anomalies=False, sample_limit=2000,
+             intelligent=False, anomaly_columns=None, contamination=.05):
     start = time.perf_counter(); keys = keys or []
     if df.empty or not len(df.columns):
         raise ValueError('No hay datos para analizar.')
@@ -47,6 +49,13 @@ def analizar(df, rules=None, source='memoria', keys=None, anomalies=False, sampl
     if anomalies:
         for col, mask, low, high in detectar_iqr(df):
             add('anomalia', col, mask, detail=f'IQR: fuera de [{low:.3f}, {high:.3f}]')
+    intelligence = {'activo': False, 'estado': 'desactivado', 'metodo': 'IsolationForest'}
+    if intelligent:
+        exclude = set(keys) | {rule['column'] for rule in rules if rule['type'] == 'unique'}
+        mask, intelligence = detectar_isolation_forest(df, anomaly_columns, contamination,
+                                                        exclude=exclude, sample_limit=sample_limit)
+        add('anomalia_multivariada', ', '.join(intelligence['columnas']), mask,
+            detail='Isolation Forest: combinación atípica. Consulta el detalle inteligente; no es un error confirmado.')
     metrics = {'completitud': 100*(1-missing/df.size), 'unicidad': 100*(1-int(dup.sum())/n)}
     for dim, (tested, errors) in dims.items():
         metrics[dim] = 100*(1-errors/tested) if tested else None
@@ -60,7 +69,8 @@ def analizar(df, rules=None, source='memoria', keys=None, anomalies=False, sampl
             'porcentaje_registros_con_errores': round(100 * affected.mean(), 4),
             'reglas_ejecutadas': len(summaries),
             'reglas_incumplidas': sum(s['fallos'] > 0 for s in summaries),
-            'anomalias': totals.get('anomalia', 0),
+            'anomalias': totals.get('anomalia', 0) + totals.get('anomalia_multivariada', 0),
+            'inteligencia': intelligence,
             'metricas': {k: round(v,4) if v is not None else None for k,v in metrics.items()},
             'score': round(score,4), 'cobertura': round(coverage*100),
             'alerta': 'REVISAR' if score < 90 else 'ACEPTABLE',

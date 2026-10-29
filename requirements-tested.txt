@@ -1,7 +1,8 @@
-# Versiones directas validadas en Windows AMD64 / Python 3.11.0, 2026-10-15.
+# Versiones directas validadas en Windows AMD64 / Python 3.11.0, 2026-10-29.
 # No es un bloqueo completo de dependencias transitivas.
 pandas==2.3.3
 numpy==2.4.6
+scikit-learn==1.8.0
 PySide6==6.12.0
 SQLAlchemy==2.1.4
 pyodbc==5.3.0

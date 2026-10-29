@@ -13,4 +13,11 @@ def exportar(report, folder):
                 # Evita interpretar fórmulas al abrir CSV exportado en Excel.
                 writer.writerows({k: "'"+v if isinstance(v,str) and v.startswith(('=', '+', '-', '@')) else v
                                   for k,v in row.items()} for row in rows)
+    intelligence = report.get('inteligencia', {})
+    if intelligence.get('activo'):
+        with (dest/'anomalias_inteligentes.csv').open('w', encoding='utf-8-sig', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=['registro', 'puntuacion_anomalia', 'decision', 'valores'])
+            writer.writeheader()
+            for row in intelligence.get('resultados', []):
+                writer.writerow({**row, 'valores': json.dumps(row['valores'], ensure_ascii=False, allow_nan=False)})
     return dest

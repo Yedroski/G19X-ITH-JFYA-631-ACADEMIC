@@ -8,5 +8,6 @@ SUGGESTIONS = {
  'allowed': 'Homologar contra el catálogo autorizado.',
  'date': 'Verificar la fecha y el formato configurado.',
  'compare': 'Revisar la relación entre ambos campos con el responsable del dato.',
- 'anomalia': 'Investigar el valor extremo; puede ser legítimo. No eliminar automáticamente.'
+ 'anomalia': 'Investigar el valor extremo; puede ser legítimo. No eliminar automáticamente.',
+ 'anomalia_multivariada': 'Revisar la combinación de valores con el responsable del dato; puede ser legítima. No corregir automáticamente.'
 }
